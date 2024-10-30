@@ -1,0 +1,11 @@
+.Rhistory
+cookies.txt
+kamalahq_df.rds
+*.docx
+*.Rproj
+.Rproj.user/
+
+/.luarc.json
+_extensions/
+comparison/
+kamalahq/
