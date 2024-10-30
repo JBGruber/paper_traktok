@@ -15,35 +15,38 @@ format:
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
 bibliography: bibliography.bib
 mask: true
+abstract: |
+  The social media platform TikTok has surged in societal and political significance, underscoring the need for communication researchers to study its content and dynamics.
+  `traktok` is an `R` package that combines an implementation of the TikTok Research API with access to TikTok content through web-scraping and the 'hidden' API, which was reverse engineered to grant users access to more content.
+  While it is neither the first nor only tool to do so, the combination  both ways to retrieve data from the platform with an easy-to-understand consistent syntax is built to encourage TikTok research.
 ---
 
 
 
 
-Since social media platform TikTok went live in Europe in August of 2018^[[https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin](https://web.archive.org/web/20231122151117/https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin)], it has quickly become one of the major players on the market.
+Since the social media platform TikTok went live in Europe in August of 2018^[[https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin](https://web.archive.org/web/20231122151117/https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin)], it has quickly become one of the major players on the market.
 As of early 2023, TikTok claims to have around 150 million users^[[https://newsroom.tiktok.com/en-eu/investing-for-our-150-m-strong-community-in-europe](https://web.archive.org/web/20231117185422/https://newsroom.tiktok.com/en-eu/investing-for-our-150-m-strong-community-in-europe)], many of which are young and committed to the platform.
 For instance, @newman_reuters_2023 positions TikTok as the third most-used platform among 18-24 year olds.
 Consequently, the platform's content has been attributed to various societal shifts, notably the increasing support for far-right parties among young voters in recent elections.^[[https://www.nytimes.com/2024/06/10/world/europe/germany-afd-eu-election.html](https://web.archive.org/web/20241003023927/https://www.nytimes.com/2024/06/10/world/europe/germany-afd-eu-election.html)].
 
 Despite TikTok's significant influence, Communication Research has only begun to explore its unique affordances, particularly its combination of video-centric content and algorithmically-driven user feeds [@boeker_empirical_2022].
-Initial research has examined how users discuss political issues with each other, finding interesting new dynamic forms of political discourse[@medina_serrano_dancing_2020] and its utilization in political campaigns, which as of recently has still failed to capitalize on the platform’s unique affordances [@cervi_tiktok_2023].
+Initial research has examined how users discuss political issues with each other, finding interesting new dynamic forms of political discourse [@medina_serrano_dancing_2020] and its utilization in political campaigns, which as of recently has still failed to capitalize on the platform’s unique affordances [@cervi_tiktok_2023].
 
-Research challenges stem from both the computational complexity of analyzing video content at scale and limited data access. 
-As @cervi_tiktok_2023 note:
-"Data have been manually collected by the authors due to the absence of any commercial API for the platform."
-While TikTok's 2023 introduction of a Research API has improved this situation by providing qualified researchers with platform access, this access remains both selective and limited in scope.
+Research challenges stem from both the computational complexity of analysing video content at scale and limited data access. 
+As @cervi_tiktok_2023 note, they had to search and collect posts manually, since any official API access was not available at the time.
+While TikTok's 2023 introduction of a Research API has improved this situation by providing qualified researchers with platform access, they do not provide tools to work with the API directly and the access remains both selective and limited in scope.
 
-This tool demo introduced `traktok`, an `R` package that combines an implemenatition of the TikTok Research API with access to TikTok content through web-scraping and the hidden API, which was reverse engeneered to grant users access to more content.
+Here I introduce `traktok`, an `R` package that combines an implementation of the TikTok Research API with access to TikTok content through web-scraping and the 'hidden' API, which was reverse engineered to grant users access to more content.
 The tool works best for projects where researchers have access to the API, as the content delivered through the API can be enriched with the other functions.
 However, even without Research API access, the package enables meaningful data collection through alternative methods.
 
 @tbl-overview gives an overview of all functions in the package.
 The following two sections detail the package's functions, categorized by their use of either the Research API or the scarping techniques, dubbed 'hidden' API.
-I then showcase how both paths can be combined meaningfully to gather insights into the platorm's content and the shortcomings of the API TikTok ofers to researchers at the moment.
+I then showcase how both paths can be combined meaningfully to gather insights into the platform's content and the shortcomings of the API TikTok offers to researchers at the moment.
 
 | Description                 | Shorthand        | Research API              | Hidden API              |
 |:----------------------------|:-----------------|:--------------------------|:------------------------|
-| search videos               | tt_search        | tt_search_api             | tt_search_hidden        |
+| search videos               | tt_search        | tt_search_api             | tt_search_hidden[^1]  |
 | get video detail (+file)    | tt_videos        | \-                        | tt_videos_hidden        |
 | get user videos             | tt_user_info     | tt_search_api             | tt_user_videos_hidden   |
 | get user info               | tt_user_info     | tt_user_info_api          | \-                      |
@@ -58,13 +61,14 @@ I then showcase how both paths can be combined meaningfully to gather insights i
 
 : Function overview of `traktok`  {#tbl-overview}
 
+[^1]: Currently not working.
 
 # Research API
 
 To get access to TikTok's Research API, researchers must be be eligible^[The [terms are available on TikTok's website for developers](https://developers.tiktok.com/products/research-api)], create a developer account and then apply for access to the research API with a specific research proposal.
-If approved, researchers receive a client key and client secret, accesible on their developer account^[<https://developers.tiktok.com/research>].
+If approved, researchers receive a client key and client secret, accessible on their developer account^[<https://developers.tiktok.com/research>].
 `traktok` facilitates authentication and stores an encrypted token, which is automatically renewed when going stale.
-All the user has to do is run the command below, which start a guided process.
+All the user has to do is run the command below once, which starts a guided process.
 
 ``` r
 library(traktok)
@@ -73,7 +77,7 @@ auth_research()
 
 ![Screenshot of authentication in the RStudio IDE](media/authentication-rstudio.png){#fig-askpass}
 
-Through the use of `askpass` [@askpass], the client key and secret are not stored in the `R` history or script and there is not chance to accidentally upload them to cloud storage or a version control system like Git.
+Through the use of `askpass` [@askpass], the client key and secret are not stored in the `R` history or script and there is no chance to accidentally upload them to cloud storage or a version control system like Git.
 This process usually does not have to be repeated, except when the user requests a client key or secret change from TikTok.
 
 The most useful endpoint that the Research API offers is to search the platform for posts.
@@ -82,14 +86,6 @@ For convenience, a query in `traktok` is constructed internally when you search 
 
 ``` r
 tt_query_videos("#rstats", max_pages = 2L)
-#> 
-ℹ Making initial request
-
-✔ Making initial request [774ms]
-#> 
-ℹ Parsing data
-
-✔ Parsing data [177ms]
 #> ── search id: NA ───────────────────────────────────────
 #> # A tibble: 0 × 13
 #> # ℹ 13 variables: video_id <lgl>, author_name <chr>,
@@ -102,7 +98,7 @@ tt_query_videos("#rstats", max_pages = 2L)
 ```
 
 This will match a supplied keyword or phrase against keywords and hashtags and return up to 200 results (each page has 100 results and 2 pages are requested by default) from today and yesterday.
-Every whitespace is treated as an AND operator.
+Every white-space is treated as an AND operator.
 To extend the data range, you can set a start and end (which can be a maximum of 30 days apart, but there is no limit how far you can go back):
 
 
@@ -141,7 +137,7 @@ tt_query_videos("#rstats",
 #> #   hashtag_names <list>, voice_to_text <chr>
 ```
 
-As said, the query syntax that TikTok uses is a little complicated, as users can chain queries with `AND`, `OR` and `NOT` Boolean operators on a number of fields (`"create_date"`, `"username"`, `"region_code"`, `"video_id"`, `"hashtag_name"`, `"keyword"`, `"music_id"`, `"effect_id"`, and `"video_length"`):
+As said, the query syntax that TikTok uses is a little complicated, as users can chain queries with `AND`, `OR` and `NOT` operators (see @tbl-boolean) on a number of fields (`"create_date"`, `"username"`, `"region_code"`, `"video_id"`, `"hashtag_name"`, `"keyword"`, `"music_id"`, `"effect_id"`, and `"video_length"`).
 
 | Operator | Results are returned if...                 |
 | -------- | ------------------------------------------ |
@@ -151,8 +147,8 @@ As said, the query syntax that TikTok uses is a little complicated, as users can
 
 : Boolean operators as used by TikTok  {#tbl-boolean}
 
-To make this easier to use, `traktok` uses a tidyverse style approach to building queries.
-For example, to get to the same query that matches #rstats against keywords and hashtags, you need to build the query like this:
+To make queries easier to use, `traktok` uses a tidyverse style approach to building a search.
+For example, to get to the same query we used above, which matches #rstats against keywords and hashtags, you need to build the query like this:
 
 
 ``` r
@@ -177,8 +173,6 @@ query() |>                                # start by using query()
 #>       └─"#rstats"
 ```
 
-If #rstats is found in either the hashtag or keywords of a video, that video is then returned.
-Besides checking for `EQ`ual, users can also use one of the other operations:
 
 | Operation | Results are returned if field_values are...     |
 | --------- | ----------------------------------------------- |
@@ -191,6 +185,8 @@ Besides checking for `EQ`ual, users can also use one of the other operations:
 
 : Condition operators as used by TikTok {#tbl-match}
 
+If #rstats is found in either the hashtag or keywords of a video, that video is then returned.
+Besides checking for `EQ`ual, users can also use one of the other operations: shown in @tbl-match.
 This makes building queries relatively complex, but allows for fine-grained searches in the TikTok data:
 
 
@@ -260,7 +256,7 @@ query() |>
 ```
 
 The second useful function that we are highlighting here is `tt_comments_api`.
-Using a video ID, it retrieves the full text of user comments, along with useful information about the discussion sctructure, like and reply counts.
+Using a video ID, it retrieves the full text of user comments, along with useful information about the discussion structure, like and reply counts.
 
 ``` r
 tt_comments_api(video_id = "7409348493329911082")
@@ -284,7 +280,7 @@ tt_comments_api(video_id = "7409348493329911082")
 #> # ℹ Use `print(n = ...)` to see more rows
 ```
 
-For many research proects, it will also be of value to determine who a user follows and who they are followed by.
+For many research projects, it will also be of value to determine who a user follows and who they are followed by.
 This can be accomplished as shown below:
 
 
@@ -320,83 +316,74 @@ tt_user_following_api("kamalahq")
 As @tbl-overview shows, there are several other functions that query the Research API, however, `tt_user_liked_videos_api` and ` tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of account, similar to the second example above;
 `tt_playlist_api` relates to a feature  of the platform that is not widely used;
 and `tt_user_info_api` only returns very basic information about accounts that is usually not meaningful for research.
-importantly, a crucial part of the data, namely the video files themselves, are not accesible through the Research API, even though videos can usually be downloaded through the official TikTok app.
+
+Importantly, a crucial part of the data, namely the video files themselves, are not accessible through the Research API---even though videos can be downloaded through the official TikTok app.
+However, `traktok` users can instead obtain this data through the 'hidden' API, discussed in the next section.
 
 # 'Hidden' API
 
 The unofficial or 'hidden' API is essentially what the TikTok website uses to display you content.
 How these endpoints work was discovered through reverse engineering and TikTok might change how these endpoints operate at any moment.
-Nevertheless, the approach has been working for more than 2 years, with only minor adaptions of the code.
-
-To make the functions work, most need acces to the browser cookies of an authenticated users.
-To supply these cookies, users can log into their TikTok account or create a new one and then use tools like ["Get cookies.txt"](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) for Chromium based browsers or ["cookies.txt"](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) for Firefox (note that almost all browsers used today are based on one of these).
-@fig-cookie shows how the process works on the browser.
+Nevertheless, the approach has been working for more than two years, with only minor adoptions of the code.
 
 ![Usage of browser cookies](media/cookies.png){#fig-cookie}
 
-It does not matter if the user downloads all cookies or just the ones specific to TikTok, as we use the `cookiemonster` [@cookiemonster] package to deal with that.
-To read the cookies into a specific encrypted file, simply use:
+Most functions operate by utilizing the cookies stored in the browser by the website, allowing requests from R to mimic those from a browser for authentication purposes.
+To get these cookies into `R`, users can log into their TikTok account (or create a new one) with a browser on their computer and then use tools like [*Get cookies.txt*](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) for Chromium based browsers or [*cookies.txt*](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) for Firefox^[As almost all browsers used today are based on one of these, these two suggestions should satisfy all users.].
+@fig-cookie shows how the process works on the browser.
+It does not matter if the user downloads all cookies or just the ones specific to TikTok, as we use the `cookiemonster` [@cookiemonster] to store cookies securely and `traktok` sends only the appropriate cookies with its requests.
+To read the cookies into a specific encrypted file, a user only has to run the following command once:
 
 
 ```r
-cookiemonster::add_cookies("tiktok.com_cookies.txt")
+auth_hidden("tiktok.com_cookies.txt")
 ```
 
-`traktok` will then access these cookies whenever necessary.
-
-Like in the Research API, users can search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website..
-To get the first two pages of search results (one page has 12 videos), you can use this command:
-
+Like in the Research API, users were, until recently, able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
+Since this was blocked by TikTok and the function is broken at the moment of writing, I instead showcase how to get videos from a user account.
+The first step to do this is to find out the internal ID of a user:
 
 ```r
-rstats_df <- tt_search_hidden("#rstats", max_pages = 2)
-
-rstats_df
-#> # A tibble: 24 × 20
-#>    video_id  video_timestamp     video_url video_length video_title
-#>    <chr>     <dttm>              <glue>           <int> <chr>      
-#>  1 71151144… 2022-06-30 19:17:53 https://…          135 "R for Beg…
-#>  2 72522261… 2023-07-05 07:01:45 https://…           36 "Wow!!! TH…
-#>  3 72420686… 2023-06-07 22:05:16 https://…           34 "R GRAPHIC…
-#>  4 72134135… 2023-03-22 16:49:12 https://…            6 "R and me …
-#>  5 72576898… 2023-07-20 00:23:40 https://…           56 "Pie chart…
-#>  6 72999870… 2023-11-10 23:58:21 https://…           51 "Quick R Q…
-#>  7 72783048… 2023-09-13 13:40:21 https://…           36 "Quick R Q…
-#>  8 73029706… 2023-11-19 00:56:09 https://…          163 "What is c…
-#>  9 71670108… 2022-11-17 15:42:56 https://…           58 "Here’s an…
-#> 10 72933174… 2023-10-24 00:36:48 https://…            9 "#CapCut #…
-#> # ℹ 14 more rows
-#> # ℹ 15 more variables: video_diggcount <int>,
-#> #   video_sharecount <int>, video_commentcount <int>,
-#> #   video_playcount <int>, video_is_ad <lgl>, author_name <chr>,
-#> #   author_nickname <chr>, author_followercount <int>,
-#> #   author_followingcount <int>, author_heartcount <int>,
-#> #   author_videocount <int>, author_diggcount <int>, …
+kamalahq_info <- tt_user_info_hidden("kamalahq")
 ```
 
-This delivers most information researchers might be interested in. 
-However, one can obtain some more information, and importantly the video file, using `tt_videos`:
+The important piece of information is stored in the column `secUid`, which we can hand to the `tt_get_follower_hidden` function:
+
+```r
+kamalahq_follower <- tt_get_follower_hidden(kamalahq_info$secUid)
+nrow(kamalahq_following)
+#> 4881
+```
+
+This does not deliver the full set of followers, but only returns what would be visible on the web version.
+It additionally takes much longer than the Research API version.
+Therefore running the function is only interesting for researcher who do no have access to the official API.
+
+The most important feature of the 'hidden' API, however, which is interesting also for users who already have access to the Research API, is to query information about specific posts and being able to download the videos or images included in them.
+This is implemented in the `tt_videos` function:
 
 
 ```r
+# this comes from a previously saved search
+rstats_df  <- readRDS("search_results.rds")
 rstats_df2 <- tt_videos(rstats_df$video_url[1:2], save_video = TRUE)
 
 rstats_df2
-#> # A tibble: 2 × 19
+#> # A tibble: 2 × 25
 #>   video_id   video_url video_timestamp     video_length video_title
 #>   <glue>     <chr>     <dttm>                     <int> <chr>      
 #> 1 711511441… https://… 2022-06-30 19:17:53          135 R for Begi…
 #> 2 725222615… https://… 2023-07-05 07:01:45           36 Wow!!! THI…
-#> # ℹ 14 more variables: video_locationcreated <chr>,
+#> # ℹ 20 more variables: video_locationcreated <chr>,
 #> #   video_diggcount <int>, video_sharecount <int>,
 #> #   video_commentcount <int>, video_playcount <int>,
-#> #   author_username <chr>, author_nickname <chr>,
-#> #   author_bio <chr>, download_url <chr>, html_status <int>,
-#> #   music <list>, challenges <list>, is_classified <lgl>,
-#> #   video_fn <chr>
+#> #   author_id <chr>, author_secuid <chr>, author_username <chr>,
+#> #   author_nickname <chr>, author_bio <chr>, download_url <chr>,
+#> #   html_status <int>, music <list>, challenges <list>,
+#> #   is_secret <lgl>, is_for_friend <lgl>, is_slides <lgl>, …
 ```
 
-When users are scraping many URLs, the function might fail eventually, due to a poor connection or because TikTok is blocking requests.
+When users are scraping many URLs, the function often fails eventually, due to a poor connection or because TikTok is blocking requests, if there are too many.
 It therefore usually makes sense to save progress in a cache directory:
 
 ```r
@@ -406,9 +393,9 @@ list.files("rstats")
 #> [1] "7257689890245201153.json" "7299987059417042209.json"
 ```
 
-Note that the video files are downloaded into the `dir` directory (your working directory by default), independently from the cache directory.
+Note that the video files are downloaded into your working directory by default^[Can be controlled with the `dir` argument in `tt_videos`.], independently from the cache directory.
+`tt_videos` already retrieves some information that is otherwise not available, like the video_status, which shows a reason when a video is no longer available.
 If there are information that users feel are missing from the `data.frame` that `tt_videos` returns, they can also access the raw, unparsed json data using:
-
 
 ```r
 rstats_list1 <- tt_request_hidden(rstats_df$video_url[1]) |>
@@ -416,18 +403,16 @@ rstats_list1 <- tt_request_hidden(rstats_df$video_url[1]) |>
 ```
 
 Parsing the result into a list using `fromJSON`, results in a complex nested list, which users can explore further.
-Additionally, the functions `tt_get_follower_hidden`, `tt_get_following_hidden`. and `tt_user_videos_hidden` mimick the behaviour of their Research API counterparts.
 
 
 # Combining the APIs
 
-As the TikTok Research API does not deliver video or image files, any anlaysis of the content of posts prerequisits an alternative route to accessing these data.
+As the TikTok Research API does not deliver video or image files, any analysis of the content of posts prerequisites an alternative route to accessing these data.
 `traktok` enables this access via the function `tt_videos_hidden`.
-As an example for combining both APIs, let's say we want to aquire all posts from "kamalahq", the campaign account of presidential candidate Kamala Harris, from August 2024.
+As an example for combining both APIs, let's say we want to acquire all posts from "kamalahq", the campaign account of US presidential election candidate Kamala Harris, from August 2024.
 We can first search for post URLs using the Research API:
 
 ```r
-#| eval: false
 kamalahq_df <- query() |>
   query_and(field_name = "username",
             operation = "EQ",
@@ -436,6 +421,8 @@ kamalahq_df <- query() |>
                 end_date = as.Date("2024-08-31"))
 ```
 
+And then download the video and image files through `tt_videos_hidden`:
+
 
 
 
@@ -443,7 +430,7 @@ kamalahq_df <- query() |>
 
 
 ```r
-#| eval: false
+
 results_df <- tt_videos_hidden(kamalahq_df$video_id,
                                save_video = TRUE,
                                cache_dir = "kamalahq",
@@ -457,10 +444,11 @@ list.files("kamalahq") |>
 ```
 
 As can be seen, the function downloaded 70 video files and additionally 96 image files, which are now also often shared on the platform, copying one of Instagram's main features.
-Additionally, the setting `cache_dir = "kamalahq"` makes sure that each request is saved, so that the user does not have to repeat it if the function fails while quering many videos in sequence.
+Since te cache was set to te same folder, we also get the raw data as json files. 
+This has the side effect that already downloaded data is not requested again, if we rerun the function, for example, with an extended list of video IDs.
 
 The second important use case for combining both APIs is to compare them to assess the completeness of results, as has been done for Facebook [@hofacebook2020] and Twitter [@tromble_twitter_2017] in the past.
-As mentioned in the introduction, Germany's far right party AFD has managed to build hard to overlook presence on TikTok, and serves as a demonstration case here.
+As mentioned in the introduction, Germany's far right party AFD has managed to build a hard to overlook presence on TikTok, and serves as a demonstration case here.
 For convenience, `traktok` provides the function `tt_user_videos_api`, which makes queries to the Research API for all videos a user has published:
 
 
@@ -490,22 +478,22 @@ results_scraping <- tt_user_videos_hidden(username = "afdfraktionimbundestag",
 
 
 
-This will open a real browser in the background that scrolls down on a specific account site until now more videos can be found.
-That will often trigger so-called *CAPTCHA*s, which are small challenges created to test if a human or bot is performing an action on the site.
-If that happens, and the argument `solve_captchas` is true, the browser will jump to the foreground, so that a user can solve it and the `traktok` can continue scrolling.
+This will open a real browser in the background that scrolls down on a specific account site until the beginning of a user's timeline is reached.
+This process will often trigger so-called *CAPTCHA*s, which are small challenges created to test if a human or bot is performing an action on the site.
+If that happens, and the argument `solve_captchas` is true, the browser will jump to the foreground, so that a user can solve it and `traktok` can continue scrolling.
 
 Comparing the results from the Research API and the scraping effort, we see some discrepancies.
-The Research API delivered 318, while the 'hidden' API found `r `nrow(results_scraping)` posts.
+The Research API delivered 318, while the 'hidden' API found only 319 posts.
 However, the content is also not as similar as these numbers suggest.
 15 posts were only accessible via the website, while 4 posts were found by the API, but not actually present on the website.
-Searching manually for the vidoes not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content.
+Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content.
 We currently do not know why the search from the API is incomplete.
 
 
 # Conclusion
 
 `traktok` provides access to TikTok, a social media platform of growing societal importance, that should be systematically studied by communication researchers.
-While it is not the first or only tool to do so, the combination of access methods in one `R` package with an easy-to-understand consistent syntax is built to encourage this research.
+While it is not the first or only tool to do so, the combination of access through the Research API and webscraping methods in one `R` package with an easy-to-understand consistent syntax is built to encourage this research.
 
 
 
