@@ -13,3 +13,15 @@ kamalahq_following.rds
 paper_traktok.fff
 paper_traktok.ttt
 afd/
+bundestag_vids/
+paper_traktok_files/
+*.png
+arxiv.sty
+*.rds
+orcidlink.sty
+paper_traktok.pdf
+paper_traktok.pdf
+paper_traktok.pdf.md
+paper_traktok.tex
+vids/
+tiktok_cookies.txt

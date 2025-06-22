@@ -1,15 +1,19 @@
 ---
-title: "[Tool Demo] `traktok` --- Making TikTok Data Accesible for Research"
+title: "`traktok` --- Making TikTok Data Accesible for Research"
 author:
   - name: Johannes B. Gruber
-    affiliations: VU Amsterdam
+    affiliations: GESIS --- Leibniz Institute for the Social Sciences
+    orcid: 0000-0001-9177-1772
+    email: Johannes.Gruber@gesis.org
+    url: https://www.johannesbgruber.eu/
 format:
-  apaquarto-pdf:
-    keep-tex: false
+  arxiv-pdf:
+    keep-tex: true
     keep-md: true
-    execute:
-      freeze: auto
-      echo: true
+    linenumbers: false
+    doublespacing: false
+    runninghead: "paperboy"
+    pdf-engine: lualatex
     include-in-header:
       - text: |
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
@@ -442,7 +446,7 @@ list.files("kamalahq") |>
 ```
 
 As can be seen, the function downloaded 70 video files and additionally 96 image files, which are now also often shared on the platform, copying one of Instagram's main features.
-Since te cache was set to te same folder, we also get the raw data as json files. 
+Since the cache was set to the same folder, we also get the raw data as json files. 
 This has the side effect that already downloaded data is not requested again, if we rerun the function, for example, with an extended list of video IDs.
 
 The second important use case for combining both APIs is to compare them to assess the completeness of results, as has been done for Facebook [@hofacebook2020] and Twitter [@tromble_twitter_2017] in the past.
@@ -451,6 +455,7 @@ For convenience, `traktok` provides the function `tt_user_videos_api`, which mak
 
 ```{r}
 #| eval: false
+#| echo: true
 results_api <- tt_user_videos_api(username = "afdfraktionimbundestag", since = "2020-01-01")
 ```
 
@@ -458,27 +463,34 @@ The same function also exists for the 'hidden' API:
 
 ```{r}
 #| eval: false
+#| echo: true
 results_scraping <- tt_user_videos_hidden(username = "afdfraktionimbundestag", 
                                           solve_captchas = TRUE)
 ```
 
 ```{r}
 #| include: false
-results_api <-      readRDS("comparison/results_api.rds")
-results_scraping <- readRDS("comparison/results_scraping.rds")
 library(tidyverse)
+results_api <- readRDS("comparison/results_api.rds") |> 
+  distinct(video_id, .keep_all = TRUE) |> 
+  mutate(available_on_api = TRUE)
+results_scraping <- readRDS("comparison/results_scraping.rds")|> 
+  distinct(video_id, .keep_all = TRUE) |> 
+  mutate(available_on_web = TRUE)
 diff_df <- results_api |> 
   full_join(results_scraping, by = "video_id") |> 
-    filter(is.na(create_time) | is.na(video_timestamp)) |>
+  #filter(is.na(create_time) | is.na(video_timestamp)) |>
   mutate(
     available_on = case_when(
-      is.na(create_time) ~ "website",
-      is.na(video_timestamp) ~ "api"
+      available_on_api & available_on_web ~ "both",
+      available_on_web ~ "website",
+      available_on_api ~ "api"
     ),
     video_time = as.POSIXct(ifelse(is.na(create_time), video_timestamp, create_time)),
     video_url_unformatted = paste0("https://www.tiktok.com/@afdfraktionimbundestag/video/", video_id),
     video_url = glue::glue('<a href="{video_url_unformatted}" target="_blank">Link</a>')
-  )
+  ) |> 
+  select(video_id, available_on, video_time, video_url_unformatted)
 ```
 
 This will open a real browser in the background that scrolls down on a specific account site until the beginning of a user's timeline is reached.
@@ -486,7 +498,7 @@ This process will often trigger so-called *CAPTCHA*s, which are small challenges
 If that happens, and the argument `solve_captchas` is true, the browser will jump to the foreground, so that a user can solve it and `traktok` can continue scrolling.
 
 Comparing the results from the Research API and the scraping effort, we see some discrepancies.
-The Research API delivered `r nrow(results_api)`, while the 'hidden' API found only `r nrow(results_scraping)` posts.
+The Research API delivered `r nrow(results_api)`, while the 'hidden' API found `r nrow(results_scraping)` posts.
 However, the content is also not as similar as these numbers suggest.
 `r sum(diff_df$available_on == "website")` posts were only accessible via the website, while `r sum(diff_df$available_on == "api")` posts were found by the API, but not actually present on the website.
 Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content.
