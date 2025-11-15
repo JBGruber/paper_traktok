@@ -7,18 +7,17 @@ author:
     email: Johannes.Gruber@gesis.org
     url: https://www.johannesbgruber.eu/
 format:
-  arxiv-pdf:
+  ccr-pdf:
     keep-tex: true
     keep-md: true
-    linenumbers: false
-    doublespacing: false
-    runninghead: "paperboy"
-    pdf-engine: lualatex
+    fig-format: pdf
     include-in-header:
       - text: |
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
 bibliography: bibliography.bib
-mask: true
+pdf-engine: xelatex
+# classoption:
+#   - review
 abstract: |
   The social media platform TikTok has surged in societal and political significance, underscoring the need for communication researchers to study its content and dynamics.
   `traktok` is an `R` package that combines an implementation of the TikTok Research API with access to TikTok content through web-scraping and the 'hidden' API, which was reverse engineered to grant users access to more content.
@@ -40,46 +39,51 @@ While TikTok's 2023 introduction of a Research API has improved this situation b
 Here I introduce `traktok`, an `R` package that combines an implementation of the TikTok Research API with access to TikTok content through web-scraping and the 'hidden' API, which was reverse engineered to grant users access to more content.
 The tool works best for projects where researchers have access to the API, as the content delivered through the API can be enriched with the other functions.
 However, even without Research API access, the package enables meaningful data collection through alternative methods.
+By implementing both pathways to TikTok data in a single package, `traktok` also enables researchers to seamlessly perform audits of both data access strategies against each other, where functions are available for both pathways.
 
 @tbl-overview gives an overview of all functions in the package.
+Since some functions are available for the Research API *and* the Hidden API, `traktok` offers some shorthand functions which autmatically chooses the Research API function in the background if credentials are available.
 The following two sections detail the package's functions, categorized by their use of either the Research API or the scarping techniques, dubbed 'hidden' API.
 I then showcase how both paths can be combined meaningfully to gather insights into the platform's content and the shortcomings of the API TikTok offers to researchers at the moment.
 
 | Description                 | Shorthand        | Research API              | Hidden API              |
 |:----------------------------|:-----------------|:--------------------------|:------------------------|
-| search videos               | tt_search        | tt_search_api             | tt_search_hidden[^1]  |
+| search videos               | tt_search        | tt_search_api             | tt_search_hidden        |
 | get video detail (+file)    | tt_videos        | \-                        | tt_videos_hidden        |
-| get user videos             | tt_user_info     | tt_search_api             | tt_user_videos_hidden   |
-| get user info               | tt_user_info     | tt_user_info_api          | \-                      |
+| get user videos             | tt_user_videos   | tt_user_videos_api        | tt_user_videos_hidden   |
+| get user info               | tt_user_info     | tt_user_info_api          | tt_user_info_hidden     |
 | get comments under a video  | tt_comments      | tt_comments_api           | \-                      |
 | get who follows a user      | tt_get_follower  | tt_user_follower_api      | tt_get_follower_hidden  |
 | get who a user is following | tt_get_following | tt_user_following_api     | tt_get_following_hidden |
 | get videos a user liked     | tt_get_liked     | tt_user_liked_videos_api  | \-                      |
+| get videos a user reposted  | tt_get_reposted  | tt_user_reposted_api      | \-                      |
 | get pinned videos of users  | tt_get_pinned    | tt_user_pinned_videos_api | \-                      |
 | get videos in a playlist    | tt_playlist      | tt_playlist_api           | \-                      |
-| get raw video data          | \-               | \-                        | tt_request_hidden       |
+| build query objects         | query            | (query_and, query_or, query_not) | \-               |
+| get raw post data           | tt_json          | \-                        | tt_request_hidden       |
+| retrieve last query/results | last_query, last_comments | \-               | \-                      |
 | authenticate a session      | \-               | auth_research             | auth_hidden             |
 
-: Function overview of `traktok`  {#tbl-overview}
-
-[^1]: Currently not working.
+: Function overview of `traktok` {#tbl-overview}
 
 # Research API
 
-To get access to TikTok's Research API, researchers must be be eligible^[The [terms are available on TikTok's website for developers](https://developers.tiktok.com/products/research-api)], create a developer account and then apply for access to the research API with a specific research proposal.
+To get access to TikTok's Research API, researchers must be eligible^[The [terms are available on TikTok's website for developers](https://developers.tiktok.com/products/research-api)], create a developer account and then apply for access to the research API with a specific research proposal.
 If approved, researchers receive a client key and client secret, accessible on their developer account^[<https://developers.tiktok.com/research>].
-`traktok` facilitates authentication and stores an encrypted token, which is automatically renewed when going stale.
+`traktok` facilitates authentication and stores an encrypted token, which is automatically renewed when going stale (i.e., expires).
 All the user has to do is run the command below once, which starts a guided process.
+Through the use of `askpass` [@askpass], the client key and secret are not stored in the `R` history or any script, but outside the working directory in the users cache.
+That should make it impossible to accidentally upload confidential credentials to cloud storage or a version control system like Git.
+This process usually does not have to be repeated, except when the user requests a client key or secret change from TikTok.
 
 ``` r
 library(traktok)
 auth_research()
 ```
 
-![Screenshot of authentication in the RStudio IDE](media/authentication-rstudio.png){#fig-askpass}
+![Screenshot of authentication in the RStudio IDE](media/authentication-rstudio.png){#fig-askpass width=60%}
 
-Through the use of `askpass` [@askpass], the client key and secret are not stored in the `R` history or script and there is no chance to accidentally upload them to cloud storage or a version control system like Git.
-This process usually does not have to be repeated, except when the user requests a client key or secret change from TikTok.
+
 
 The most useful endpoint that the Research API offers is to search the platform for posts.
 For queries, TikTok uses a fine-grained, yet complicated [query syntax](https://developers.tiktok.com/doc/research-api-specs-query-videos#query).
@@ -226,7 +230,7 @@ This will return videos posted in the US or Japan, that have "rstats" as the onl
 See <https://developers.tiktok.com/doc/research-api-specs-query-videos#condition_fields> for possible values of each field.
 ]
 
-Instead of searching for videos by keyword or hashtag, the endpoint also allows to query all videos a specific account has posted:
+Instead of searching for videos by keyword or hashtag, the endpoint also allows querying all videos a specific account has posted:
 
 ``` r
 query() |>
@@ -314,8 +318,8 @@ tt_user_following_api("kamalahq")
 #> # i 1 variable: following_user <chr>
 ```
 
-As @tbl-overview shows, there are several other functions that query the Research API, however, `tt_user_liked_videos_api` and ` tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of account, similar to the second example above;
-`tt_playlist_api` relates to a feature  of the platform that is not widely used;
+As @tbl-overview shows, there are several other functions that query the Research API, however, `tt_user_liked_videos_api` and ` tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of accounts, similar to the second example above;
+`tt_playlist_api` relates to a feature of the platform that is not widely used;
 and `tt_user_info_api` only returns very basic information about accounts that is usually not meaningful for research.
 
 Importantly, a crucial part of the data, namely the video files themselves, are not accessible through the Research API---even though videos can be downloaded through the official TikTok app.
@@ -324,7 +328,7 @@ However, `traktok` users can instead obtain this data through the 'hidden' API, 
 # 'Hidden' API
 
 The unofficial or 'hidden' API is essentially what the TikTok website uses to display you content.
-How these endpoints work was discovered through reverse engineering and TikTok might change how these endpoints operate at any moment.
+How these endpoints work was discovered through reverse engineering -- that is, studying how the browser retrieves data to display it and mimicking this behaviour in `R`^[The groundwork for this was done by Deen Freelon and his pyktok Python package.] -- and TikTok might change how these endpoints operate at any moment.
 Nevertheless, the approach has been working for more than two years, with only minor adoptions of the code.
 
 ![Usage of browser cookies](media/cookies.png){#fig-cookie}
@@ -332,17 +336,34 @@ Nevertheless, the approach has been working for more than two years, with only m
 Most functions operate by utilizing the cookies stored in the browser by the website, allowing requests from R to mimic those from a browser for authentication purposes.
 To get these cookies into `R`, users can log into their TikTok account (or create a new one) with a browser on their computer and then use tools like [*Get cookies.txt*](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) for Chromium based browsers or [*cookies.txt*](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) for Firefox^[As almost all browsers used today are based on one of these, these two suggestions should satisfy all users.].
 @fig-cookie shows how the process works on the browser.
-It does not matter if the user downloads all cookies or just the ones specific to TikTok, as we use the `cookiemonster` [@cookiemonster] to store cookies securely and `traktok` sends only the appropriate cookies with its requests.
+It does not matter if the user downloads all cookies or just the ones specific to TikTok, as I use the `cookiemonster` [@cookiemonster] to store cookies securely and `traktok` sends only the appropriate cookies with its requests.
 To read the cookies into a specific encrypted file, a user only has to run the following command once:
-
 
 ```r
 auth_hidden("tiktok.com_cookies.txt")
 ```
 
-Like in the Research API, users were, until recently, able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
-Since this was blocked by TikTok and the function is broken at the moment of writing, I instead showcase how to get videos from a user account.
-The first step to do this is to find out the internal ID of a user:
+Like in the Research API, users are able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
+
+```{r}
+#| eval: false
+library(traktok)
+rstats_df_f <- "rstats_df.rds"
+if (!file.exists(rstats_df_f)) {
+  rstats_df <- tt_search_hidden("#rstats")
+}
+rstats_df <- readRDS(rstats_df_f)
+rstats_df
+```
+
+```r
+#| eval: false
+rstats_df <- tt_search_hidden("#rstats")
+rstats_df
+```
+
+Additionally, we can query all videos posted by a specific user account.
+The first step to take this is to find out the internal ID of a user:
 
 ```r
 kamalahq_info <- tt_user_info_hidden("kamalahq")
@@ -358,7 +379,7 @@ nrow(kamalahq_following)
 
 This does not deliver the full set of followers, but only returns what would be visible on the web version.
 It additionally takes much longer than the Research API version.
-Therefore running the function is only interesting for researcher who do no have access to the official API.
+Therefore, running the function is only interesting for researcher who do no have access to the official API.
 
 The most important feature of the 'hidden' API, however, which is interesting also for users who already have access to the Research API, is to query information about specific posts and being able to download the videos or images included in them.
 This is implemented in the `tt_videos` function:
@@ -394,7 +415,7 @@ list.files("rstats")
 #> [1] "7257689890245201153.json" "7299987059417042209.json"
 ```
 
-Note that the video files are downloaded into your working directory by default^[Can be controlled with the `dir` argument in `tt_videos`.], independently from the cache directory.
+Note that the video files are downloaded into your working directory by default^[Can be controlled with the `dir` argument in `tt_videos`.], independently of the cache directory.
 `tt_videos` already retrieves some information that is otherwise not available, like the video_status, which shows a reason when a video is no longer available.
 If there are information that users feel are missing from the `data.frame` that `tt_videos` returns, they can also access the raw, unparsed json data using:
 
@@ -456,7 +477,10 @@ For convenience, `traktok` provides the function `tt_user_videos_api`, which mak
 ```{r}
 #| eval: false
 #| echo: true
-results_api <- tt_user_videos_api(username = "afdfraktionimbundestag", since = "2020-01-01")
+results_api <- tt_user_videos_api(
+  username = "afdfraktionimbundestag",
+  since = "2020-01-01"
+)
 ```
 
 The same function also exists for the 'hidden' API:
@@ -464,21 +488,23 @@ The same function also exists for the 'hidden' API:
 ```{r}
 #| eval: false
 #| echo: true
-results_scraping <- tt_user_videos_hidden(username = "afdfraktionimbundestag", 
-                                          solve_captchas = TRUE)
+results_scraping <- tt_user_videos_hidden(
+  username = "afdfraktionimbundestag",
+  solve_captchas = TRUE
+)
 ```
 
 ```{r}
 #| include: false
 library(tidyverse)
-results_api <- readRDS("comparison/results_api.rds") |> 
-  distinct(video_id, .keep_all = TRUE) |> 
+results_api <- readRDS("comparison/results_api.rds") |>
+  distinct(video_id, .keep_all = TRUE) |>
   mutate(available_on_api = TRUE)
-results_scraping <- readRDS("comparison/results_scraping.rds")|> 
-  distinct(video_id, .keep_all = TRUE) |> 
+results_scraping <- readRDS("comparison/results_scraping.rds") |>
+  distinct(video_id, .keep_all = TRUE) |>
   mutate(available_on_web = TRUE)
-diff_df <- results_api |> 
-  full_join(results_scraping, by = "video_id") |> 
+diff_df <- results_api |>
+  full_join(results_scraping, by = "video_id") |>
   #filter(is.na(create_time) | is.na(video_timestamp)) |>
   mutate(
     available_on = case_when(
@@ -486,10 +512,19 @@ diff_df <- results_api |>
       available_on_web ~ "website",
       available_on_api ~ "api"
     ),
-    video_time = as.POSIXct(ifelse(is.na(create_time), video_timestamp, create_time)),
-    video_url_unformatted = paste0("https://www.tiktok.com/@afdfraktionimbundestag/video/", video_id),
-    video_url = glue::glue('<a href="{video_url_unformatted}" target="_blank">Link</a>')
-  ) |> 
+    video_time = as.POSIXct(ifelse(
+      is.na(create_time),
+      video_timestamp,
+      create_time
+    )),
+    video_url_unformatted = paste0(
+      "https://www.tiktok.com/@afdfraktionimbundestag/video/",
+      video_id
+    ),
+    video_url = glue::glue(
+      '<a href="{video_url_unformatted}" target="_blank">Link</a>'
+    )
+  ) |>
   select(video_id, available_on, video_time, video_url_unformatted)
 ```
 
@@ -501,16 +536,27 @@ Comparing the results from the Research API and the scraping effort, we see some
 The Research API delivered `r nrow(results_api)`, while the 'hidden' API found `r nrow(results_scraping)` posts.
 However, the content is also not as similar as these numbers suggest.
 `r sum(diff_df$available_on == "website")` posts were only accessible via the website, while `r sum(diff_df$available_on == "api")` posts were found by the API, but not actually present on the website.
-Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content.
+Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content -- which can also be obtained through the Hidden API by logging in as an age-verified user.
 We currently do not know why the search from the API is incomplete.
 
 
-# Conclusion
+# Current status and future
 
 `traktok` provides access to TikTok, a social media platform of growing societal importance, that should be systematically studied by communication researchers.
-While it is not the first or only tool to do so, the combination of access through the Research API and webscraping methods in one `R` package with an easy-to-understand consistent syntax is built to encourage this research.
+While it is not the first or only tool to do so, the combination of access through the Research API and web scraping methods in one `R` package with an easy-to-understand consistent syntax is built to encourage this research.
 
+Several studies have used the package already to make important contributions.
+In communication research, @wirz_qualitat_2023 studied the posts of news organizations on TikTok compared with the same outlets' websites and found a high quality of news report, though be it with more focus on emotional and soft news.
+Similarly, @wirz_infotainment_2025 studied Instagram and TikTok content by news companies, finding that many outlets still share high quality news content, peppered with some more entertainment.
+@hohner_analysing_2024 studied mobilization strategies of far-right groups on TikTok and found distinct communication strategies like using conspiracy narratives and anti-elitism.
+@widholm_right-wing_2024 studied election campaign videos in Sweden, revealing that youth organizations had the most prominent accounts and that right-wing content resulted in more engagement.
+@peterson-salahuddin_teachable_2025 found that the "TikTok’s predominantly Gen-Z users engage the platform to discuss, negotiate, and put in place socially progressive norms around racism, sexism, and homophobia." [p. 430]
 
+But also beyond communication research, the package has already been employed for important contributions.
+In medicine, @blakeman_describing_2025 studied posts with health-related information on Twitter (X), Instagram, and, using `traktok` also TikTok.
+@donaldson_describing_2025 studied how especially young users discuss nicotine pouches on TikTok, with the result that many videos featured pro-tobacco themes.
+
+Studying TikTok comes with some important legal and ethical considerations, which researchers should keep in mind.
 
 \newpage
 
