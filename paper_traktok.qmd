@@ -7,15 +7,16 @@ author:
     email: Johannes.Gruber@gesis.org
     url: https://www.johannesbgruber.eu/
 format:
-  ccr-pdf:
+  arxiv-pdf:
     keep-tex: true
     keep-md: true
     fig-format: pdf
+    runninghead: "traktok"
     include-in-header:
       - text: |
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
 bibliography: bibliography.bib
-pdf-engine: xelatex
+pdf-engine: lualatex
 classoption:
   - review
 keywords: TikTok, social media research, research software, data collection
