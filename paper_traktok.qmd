@@ -2,10 +2,16 @@
 title: "`traktok` --- Making TikTok Data Accesible for Research"
 author:
   - name: Johannes B. Gruber
-    affiliations: GESIS --- Leibniz Institute for the Social Sciences
+    affiliations:
+      - ref: gesis
     orcid: 0000-0001-9177-1772
     email: Johannes.Gruber@gesis.org
     url: https://www.johannesbgruber.eu/
+affiliations:
+  - id: gesis
+    department: Data Services for the Social Sciences 
+    name: GESIS --- Leibniz Institute for the Social Sciences
+    country: DE
 format:
   ccr-pdf:
     keep-tex: true
