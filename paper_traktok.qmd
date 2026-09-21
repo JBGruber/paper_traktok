@@ -91,7 +91,7 @@ The package can be installed from CRAN (@cran):
 install.packages("traktok")
 ```
 
-For the development version, it is also possible to install the package from GitHub directly.
+For the development version, it is also possible to install the package from GitHub directly^[<https://anonymous.4open.science/r/traktok-26DD>].
 
 # Research API
 
@@ -608,6 +608,10 @@ Similarly, @wirz_infotainment_2025 studied Instagram and TikTok content by news 
 But also beyond communication research, the package has already been employed for important contributions.
 In medicine, @blakeman_describing_2025 studied posts with health-related information on Twitter (X), Instagram, and, using `traktok` also TikTok.
 @donaldson_describing_2025 studied how especially young users discuss nicotine pouches on TikTok, with the result that many videos featured pro-tobacco themes.
+
+As noted above, TikTok can change the endpoints behind the 'hidden' API at any time, and there is no guarantee that the Research API stays as it is either.
+I therefore intend to keep maintaining `traktok` for the foreseeable future: development happens openly in the GitHub repository, where users can report problems and contribute fixes, and stable versions are published on CRAN.
+Should I at some point be unable to continue this work, which I consider unlikely, I will look for a successor and hand the package over to a new maintainer or organization rather than let it go stale.
 
 Studying TikTok comes with some important legal and ethical considerations, which researchers should keep in mind.
 First, when collecting data via APIs or web scraping, researchers must navigate data privacy regulations, particularly the General Data Protection Regulation (GDPR) in Europe and similar frameworks globally which protect personal data of users [@european_union_regulation_2016].
