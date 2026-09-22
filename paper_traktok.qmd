@@ -358,7 +358,7 @@ Nevertheless, the approach has been working since 2022, with only minor adoption
 
 ![Usage of browser cookies](media/cookies.png){#fig-cookie}
 
-Most functions operate by utilizing the cookies stored in the browser by the website, allowing requests from R to mimic those from a browser for authentication purposes.
+All functions of the 'hidden' API operate by utilizing the cookies stored in the browser by the website, allowing requests from R to mimic those from a browser for authentication purposes.
 HTTP cookies are small blocks of data websites store in the browser to identify users, which can range from simple things like remembering your language preference or items in your shopping cart to more critical functions like keeping you logged in to your account by storing an authentication token that verifies your identity with each page you visit.
 To get these cookies into `R`, users can log into their TikTok account (or create a new one) with a browser on their computer and then use tools like [*Get cookies.txt*](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) for Chromium based browsers or [*cookies.txt*](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) for Firefox^[As almost all browsers used today are based on one of these, these two suggestions should satisfy all users.].
 @fig-cookie shows how the process works on the browser.
@@ -368,6 +368,11 @@ To read the cookies into a specific encrypted file, a user only has to run the f
 ```r
 auth_hidden("tiktok.com_cookies.txt")
 ```
+
+A few things about these cookies are worth clarifying.
+A logged in account is not strictly necessary, as TikTok also sets cookies for visitors who are not logged in, but the website hides some content, such as age-restricted videos, from these sessions and prompts a login after a few dozen search results at most, which is why I recommend logging in before exporting the cookies.
+Since the cookies identify the account uniquely, TikTok could in principle link the requests made by `traktok` to it.
+I have never had any action taken against an account I used, but I relied on a throwaway account for most of my work and recommend that users do the same.
 
 Like in the Research API, users are able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
 Technically, the function open a browser in the background and keeps scrolling down until there are no more videos found or until a predefined end time is reached.
@@ -458,7 +463,7 @@ rstats_df2
 #> #   is_secret <lgl>, is_for_friend <lgl>, is_slides <lgl>, …
 ```
 
-When users are scraping many URLs, the function often fails eventually, due to a poor connection or because TikTok is blocking requests, if there are too many.
+When users are scraping many URLs, which in my experience means thousands rather than hundreds, the function often fails eventually, due to a poor connection or because TikTok is blocking requests, if there are too many.
 It therefore usually makes sense to save progress in a cache directory:
 
 ```r
@@ -467,6 +472,9 @@ rstats_df3 <- tt_videos(rstats_df$video_url[5:6], cache_dir = "rstats")
 list.files("rstats")
 #> [1] "7257689890245201153.json" "7299987059417042209.json"
 ```
+
+With this, the package comfortably handles the scale of most research projects, which I would put at somewhere between a handful and around a hundred thousand videos.
+I have tested the functions with collections of about twenty thousand videos, which takes some time, and larger collections are possible with patience, but industrial-scale scraping of the platform is not what `traktok` is intended for.
 
 Note that the video files are downloaded into your working directory by default^[Can be controlled with the `dir` argument in `tt_videos`.], independently of the cache directory.
 `tt_videos` already retrieves some information that is otherwise not available, like the video_status, which shows a reason when a video is no longer available.
