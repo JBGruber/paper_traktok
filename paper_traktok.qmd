@@ -136,7 +136,7 @@ This will match a supplied keyword or phrase against keywords and hashtags and r
 This somewhat odd default window is deliberate, as TikTok states that new videos take up to 48 hours to be added to the search engine behind the Research API and that statistics such as the view count can take up to 10 days to update.^[See <https://developers.tiktok.com/doc/research-api-faq>.]
 @entrena-serrano_tiktoks_2025 found in their tests that videos were frequently still missing after 72 hours, so when setting the dates manually, I recommend leaving a gap of at least three days between the end date of a query and the day it is run, and of ten days if the engagement statistics matter for the analysis.
 Every white-space is treated as an AND operator.
-To extend the data range, you can set a start and end (which can be a maximum of 30 days apart, but there is no limit how far you can go back):
+To extend the data range, you can set a start and end (there is no limit how far you can go back):
 
 
 ``` r
@@ -173,6 +173,9 @@ tt_query_videos("#rstats",
 #> #   music_id <chr>, video_description <chr>,
 #> #   hashtag_names <list>, voice_to_text <chr>
 ```
+
+The API itself only accepts a start and end that are a maximum of 30 days apart, but `traktok` takes care of this in the background: longer time spans are split into consecutive windows of at most 30 days, which are queried one after the other before the results are combined (`max_pages` then applies to each window separately).
+The returned object also carries the start and end date of the last window as attributes, so that a search that failed halfway through a long time span can be picked back up where it stopped.
 
 As said, the query syntax that TikTok uses is a little complicated, as users can chain queries with `AND`, `OR` and `NOT` operators (see @tbl-boolean) on a number of fields (`"create_date"`, `"username"`, `"region_code"`, `"video_id"`, `"hashtag_name"`, `"keyword"`, `"music_id"`, `"effect_id"`, and `"video_length"`).
 
@@ -538,6 +541,9 @@ list.files("kamalahq") |>
 ```
 
 As can be seen, the function downloaded 70 video files and additionally 96 image files, which are now also often shared on the platform, copying one of Instagram's main features.
+These image files belong to so-called slideshows or photo posts, for which TikTok has since stopped including the data in the page source that `tt_videos_hidden` reads.
+`traktok` therefore recognises slideshows among the URLs and, once all other posts are collected, asks whether to hand them to `tt_slideshow_hidden` (or does so directly with `slideshows = TRUE`), which opens each post in a browser in the background, waits until the site has requested the post data itself and collects the metadata and images from there.
+As the audio track is often as important for understanding these posts as the images, the function also downloads the music of a slideshow as an mp3 file next to the images.
 Since the cache was set to the same folder, we also get the raw data as json files. 
 This has the side effect that already downloaded data is not requested again, if we rerun the function, for example, with an extended list of video IDs.
 
