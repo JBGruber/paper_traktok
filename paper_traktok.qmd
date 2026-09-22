@@ -385,7 +385,8 @@ Since the cookies identify the account uniquely, TikTok could in principle link 
 I have never had any action taken against an account I used, but I relied on a throwaway account for most of my work and recommend that users do the same; I return to the legal side of this in the section on legal and ethical considerations below.
 
 Like in the Research API, users are able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
-Technically, the function open a browser in the background and keeps scrolling down until there are no more videos found or until a predefined end time is reached.
+Technically, the function opens a browser in the background and keeps scrolling down until there are no more videos found or until a predefined end time is reached.
+One caveat is that TikTok usually interrupts the scrolling with a CAPTCHA at some point, which is why the example below sets `solve_captchas = TRUE`; I explain what happens in that case in the section on combining the APIs below.
 In the example below, we search for the hashtag "rstats" again and let the function scroll for two minutes.
 It is also possible to scroll for an infinite time, stopping only when no more videos are returned.
 However, whether or not an end time is defined, the user can always cancel the process without loosing data.
