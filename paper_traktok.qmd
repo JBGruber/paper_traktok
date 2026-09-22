@@ -486,6 +486,9 @@ rstats_list1 <- tt_request_hidden(rstats_df$video_url[1]) |>
 ```
 
 Parsing the result into a list using `fromJSON`, results in a complex nested list, which users can explore further.
+At the time of writing, this list contains, for example, the text of stickers placed on the video, an indicator whether the post is an advertisement, links to automatically generated subtitles, the follower count of the author and a label for AI-generated content, none of which are part of the parsed `data.frame` yet.
+These fields are candidates to be added to the output of `tt_videos` in upcoming versions, as I extend the parser whenever fields turn out to be useful for research.
+I refrain from documenting the raw data in more detail, however, as TikTok keeps changing which fields are available.
 
 
 # Combining the APIs
