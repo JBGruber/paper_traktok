@@ -615,7 +615,7 @@ The Research API delivered `r nrow(results_api)`, while the 'hidden' API found `
 However, the content is also not as similar as these numbers suggest.
 `r sum(diff_df$available_on == "website")` posts were only accessible via the website, while `r sum(diff_df$available_on == "api")` posts were found by the API, but not actually present on the website.
 Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content -- which can also be obtained through the Hidden API by logging in as an age-verified user.
-We currently do not know why the search from the API is incomplete.
+We currently do not know why the search from the API is incomplete (I come back to this in the final section).
 
 
 # Legal and ethical considerations
@@ -657,6 +657,11 @@ Similarly, @wirz_infotainment_2025 studied Instagram and TikTok content by news 
 But also beyond communication research, the package has already been employed for important contributions.
 In medicine, @blakeman_describing_2025 studied posts with health-related information on Twitter (X), Instagram, and, using `traktok` also TikTok.
 @donaldson_describing_2025 studied how especially young users discuss nicotine pouches on TikTok, with the result that many videos featured pro-tobacco themes.
+
+The discrepancy between the Research API and the website that I showed in the section on combining the APIs also deserves a closer look, as it is not a quirk of my example but has by now been confirmed at a larger scale.
+@pearson_tiktok_api_2025 audited the API against the website and likewise found publicly available videos that the API did not return, along with view counts that were, for data collected before July 2024, orders of magnitude lower than those displayed on the website and errors when filtering by username; @corso_what_2024 obtained at most 65% of the videos they requested when drawing a random sample over six years; and @entrena-serrano_tiktoks_2025 found that one in eight videos in a donated dataset of around 260,000 posts were publicly available on the website but not retrievable through the API.
+TikTok has not explained these gaps, but the audits allow for informed assumptions: besides deleted and private videos, which the documentation mentions, the API withholds advertisements, videos posted by TikTok itself, everything by creators it locates in Canada and, for no apparent reason, some accounts altogether, while a share of the missing videos remains unexplained [@entrena-serrano_tiktoks_2025].
+For researchers this means that the Research API should not be mistaken for a complete record and that scraping the website remains the only way to check what it delivers, which is a second reason for keeping both routes in one package.
 
 As noted above, TikTok can change the endpoints behind the 'hidden' API at any time, and there is no guarantee that the Research API stays as it is either.
 I therefore intend to keep maintaining `traktok` for the foreseeable future: development happens openly in the GitHub repository, where users can report problems and contribute fixes, and stable versions are published on CRAN.
