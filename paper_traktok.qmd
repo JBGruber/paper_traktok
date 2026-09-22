@@ -372,7 +372,7 @@ auth_hidden("tiktok.com_cookies.txt")
 A few things about these cookies are worth clarifying.
 A logged in account is not strictly necessary, as TikTok also sets cookies for visitors who are not logged in, but the website hides some content, such as age-restricted videos, from these sessions and prompts a login after a few dozen search results at most, which is why I recommend logging in before exporting the cookies.
 Since the cookies identify the account uniquely, TikTok could in principle link the requests made by `traktok` to it.
-I have never had any action taken against an account I used, but I relied on a throwaway account for most of my work and recommend that users do the same.
+I have never had any action taken against an account I used, but I relied on a throwaway account for most of my work and recommend that users do the same; I return to the legal side of this in the section on legal and ethical considerations below.
 
 Like in the Research API, users are able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
 Technically, the function open a browser in the background and keeps scrolling down until there are no more videos found or until a predefined end time is reached.
@@ -604,6 +604,30 @@ Searching manually for the videos not present on the channel page on the website
 We currently do not know why the search from the API is incomplete.
 
 
+# Legal and ethical considerations
+
+Studying TikTok comes with some important legal and ethical considerations, which researchers should keep in mind.
+First, when collecting data via APIs or web scraping, researchers must navigate data privacy regulations, particularly the General Data Protection Regulation (GDPR) in Europe and similar frameworks globally which protect personal data of users [@european_union_regulation_2016].
+As posts on TikTok often contain such personal data, `traktok` users usually need to familiarize themselves with what they can and cannot do with the data they obtain.
+One option to legally acquire and share the data would be to obtain informed consent from the persons who appear in posts [@breuer_overview_2025].
+Yet, collecting public data in bulk makes individual consent impractical [@ohme_digital_2024].
+There are certain exceptions for research on systemic risks, which mandate additional requirements for the research pipeline, especially data minimization principles though --- that is, collecting only data necessary for addressing specific research questions [@breuer_overview_2025].
+Preprocessing steps to remove personally identifiable information before analysis are essential [@ohme_digital_2024], though even seemingly anonymous data like follower counts with timestamps can enable re-identification [@williams_towards_2017].
+For `traktok` users, this means deciding before the collection which of the returned fields a research question actually requires and discarding the rest: the `data.frame` returned by `tt_videos`, for instance, contains the usernames, display names and biographies of authors, which many analyses do not need, and the cache directory and the downloaded video files contain the complete, unprocessed data, which should be stored securely and deleted once they have served their purpose.
+
+Secondly, platform-centric methods like scraping public content operate in a legally ambiguous space: while cases like HiQ v. LinkedIn in the United States have upheld the legality of scraping publicly accessible data without breaching technological barriers [@ratswd_big_2020], researchers must still try to respect platform Terms of Service and consider that users may not be aware their public data can be used for research [@breuer_overview_2025].
+The two ways of accessing TikTok described above differ in this respect: the Research API is an official channel, whose terms researchers accept when they apply for access, whereas the 'hidden' API needs to be considered scraping, and TikTok's Terms of Service prohibit extracting data from the platform with automated software that TikTok has not approved.^[See the section "What you can't do on the Platform" in the terms for the European Economic Area, <https://www.tiktok.com/legal/page/eea/terms-of-service/en>; the terms for the United States, <https://www.tiktok.com/legal/page/us/terms-of-service/en>, contain the same clause.]
+@brown_web_2025 review the case law for the United States and conclude that the legal risk is lowest when researchers collect only what is publicly accessible without an account and do not circumvent technical barriers, and that it is higher when data are collected through an account, as the 'hidden' API functions of `traktok` do, since the account holder has agreed to the terms and the platform can withdraw its permission at any time, for example by blocking the account.
+A breach of the Terms of Service alone is not a criminal offence in the United States and the platform would have to demonstrate actual harm, which is difficult in the case of non-commercial research [@brown_web_2025], but even though unlikely, legal dispute is costly and, as @brown_web_2025 point out, a university's legal department represents the university rather than the individual researcher.
+I therefore recommend that users consult their institution's legal counsel and data protection officer before collecting data at scale with the 'hidden' API, and clarify at the same time whether the institution would support them should TikTok take action against them.
+Zero legal risk is not attainable in this area, and excessive caution comes at the cost of research that is in the public interest [@brown_web_2025], which is why `traktok` is built to stay within what a regular user could do in a browser: the functions of the 'hidden' API wait a random interval between requests (see the `sleep_pool` argument), which keeps the pace of requests, and thereby the load on TikTok's servers, close to that of a human user, and when the site asks for a CAPTCHA, the browser is handed to the user rather than the challenge being circumvented.
+
+Thirdly, the Digital Services Act (DSA) in the European Union introduces new provisions mandating platforms to provide data access to qualified researchers [@ausloos_researching_2021], potentially reducing dependency on platform cooperation and legally and ethically ambiguous data collection methods.
+However, implementation details and enforcement mechanisms remain evolving.
+Finally, researchers should consider the ethical implications of studying vulnerable populations, particularly given TikTok's young user base, and the potential harms from analyzing sensitive content without appropriate safeguards [@breuer_overview_2025].
+Questions like these are what institutional ethics boards are for, and I recommend involving them early, before a collection has started, rather than after the fact [@brown_web_2025].
+
+
 # Current status and future
 
 `traktok` provides access to TikTok, a social media platform of growing societal importance, that should be systematically studied by communication researchers.
@@ -623,18 +647,6 @@ In medicine, @blakeman_describing_2025 studied posts with health-related informa
 As noted above, TikTok can change the endpoints behind the 'hidden' API at any time, and there is no guarantee that the Research API stays as it is either.
 I therefore intend to keep maintaining `traktok` for the foreseeable future: development happens openly in the GitHub repository, where users can report problems and contribute fixes, and stable versions are published on CRAN.
 Should I at some point be unable to continue this work, which I consider unlikely, I will look for a successor and hand the package over to a new maintainer or organization rather than let it go stale.
-
-Studying TikTok comes with some important legal and ethical considerations, which researchers should keep in mind.
-First, when collecting data via APIs or web scraping, researchers must navigate data privacy regulations, particularly the General Data Protection Regulation (GDPR) in Europe and similar frameworks globally which protect personal data of users [@european_union_regulation_2016].
-As posts on TikTok often contain such personal data, `traktok` users usually need to familiarize themselves with what they can and cannot do with the data they obtain.
-One option to legally acquire and share the data would be to obtain informed consent from the persons who appear in posts [@breuer_overview_2025].
-Yet, collecting public data in bulk makes individual consent impractical [@ohme_digital_2024].
-There are certain exceptions for research on systemic risks, which mandate additional requirements for the research pipeline, especially data minimization principles though --- that is, collecting only data necessary for addressing specific research questions [@breuer_overview_2025].
-Preprocessing steps to remove personally identifiable information before analysis are essential [@ohme_digital_2024], though even seemingly anonymous data like follower counts with timestamps can enable re-identification [@williams_towards_2017].
-Secondly, platform-centric methods like scraping public content operate in a legally ambiguous space: while cases like HiQ v. LinkedIn in the United States have upheld the legality of scraping publicly accessible data without breaching technological barriers [@ratswd_big_2020], researchers must still try to respect platform Terms of Service and consider that users may not be aware their public data can be used for research [@breuer_overview_2025].
-Thirdly, the Digital Services Act (DSA) in the European Union introduces new provisions mandating platforms to provide data access to qualified researchers [@ausloos_researching_2021], potentially reducing dependency on platform cooperation and legally and ethically ambiguous data collection methods.
-However, implementation details and enforcement mechanisms remain evolving.
-Finally, researchers should consider the ethical implications of studying vulnerable populations, particularly given TikTok's young user base, and the potential harms from analyzing sensitive content without appropriate safeguards [@breuer_overview_2025].
 
 \newpage
 
