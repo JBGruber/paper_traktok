@@ -132,7 +132,9 @@ tt_query_videos("#rstats", max_pages = 2L)
 #> #   voice_to_text <chr>
 ```
 
-This will match a supplied keyword or phrase against keywords and hashtags and return up to 200 results (each page has 100 results and 2 pages are requested by default) from today and yesterday.
+This will match a supplied keyword or phrase against keywords and hashtags and return up to 200 results (each page has 100 results and 2 pages are requested by default) from ten and eleven days ago (the defaults are `start_date = Sys.Date() - 11` and `end_date = Sys.Date() - 10`).
+This somewhat odd default window is deliberate, as TikTok states that new videos take up to 48 hours to be added to the search engine behind the Research API and that statistics such as the view count can take up to 10 days to update.^[See <https://developers.tiktok.com/doc/research-api-faq>.]
+@entrena-serrano_tiktoks_2025 found in their tests that videos were frequently still missing after 72 hours, so when setting the dates manually, I recommend leaving a gap of at least three days between the end date of a query and the day it is run, and of ten days if the engagement statistics matter for the analysis.
 Every white-space is treated as an AND operator.
 To extend the data range, you can set a start and end (which can be a maximum of 30 days apart, but there is no limit how far you can go back):
 
