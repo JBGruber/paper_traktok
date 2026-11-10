@@ -1,5 +1,5 @@
 ---
-title: "`traktok` --- Making TikTok Data Accesible for Research"
+title: "`traktok` --- Making TikTok Data Accessible for Research"
 author:
   - name: Johannes B. Gruber
     affiliations:
@@ -49,12 +49,13 @@ These affordances have consequences: compared to YouTube, a larger share of TikT
 Initial research has examined how users discuss political issues with each other, finding interesting new dynamic forms of political discourse in duets between partisan users [@medina_serrano_dancing_2020], and its utilization in political campaigns, where candidates as of recently still failed to capitalize on the platform’s unique affordances [@cervi_tiktok_2023].
 Some of the content is also genuinely new to political communication: @munger_thirst_2025 study 'edits' --- highly edited compilations of existing footage of politicians, set to music, where facticity is beside the point and the goal is to make the politician look attractive or impressive --- and show experimentally that these videos shift how voters evaluate them.
 What these studies have in common is that their data were limited by what could be collected at the time rather than by their research questions.
-@medina_serrano_dancing_2020 and @munger_thirst_2025 had to rely on TikTok's hashtag search, which returns an undisclosed selection of popular and recent videos, and the `R` package with which @guinaudeau_fifteen_2022 collected close to two million videos stopped working after a security update in late 2020.
+@medina_serrano_dancing_2020 and @munger_thirst_2025 had to rely on TikTok's hashtag search, which returns an undisclosed selection of popular and recent videos, and the `R` package with which @guinaudeau_fifteen_2022 collected close to two million videos stopped working after TikTok implemented an update in late 2020.
 
-Research challenges stem from both the computational complexity of analysing video content at scale and limited data access.
-Yet the video files are worth the effort: @kim_going_2023, for example, find that users engage differently with emotional and identity cues in anti-vaccination videos depending on whether these appear in the caption, the spoken audio, or the visuals, so that an analysis of textual metadata alone would miss an important part of how content on the platform works.
+Research challenges stem from both the computational complexity of analysing video content at scale --- which I will not address here --- and limited data access.
 As @cervi_tiktok_2023 note, they had to search and collect posts manually, since any official API access was not available at the time.
 While TikTok's 2023 introduction of a Research API has improved this situation by providing qualified researchers with platform access, they do not provide tools to work with the API directly and the access remains both selective and limited in scope.
+Most prominently, it is still not possible to download images and videos from the platform.
+Yet the video files are worth the effort: @kim_going_2023, for example, find that users engage differently with emotional and identity cues in anti-vaccination videos depending on whether these appear in the caption, the spoken audio, or the visuals, so that an analysis of textual metadata alone would miss an important part of how content on the platform works.
 This creates a significant barrier for communication researchers who might possess deep theoretical knowledge and extensive experience studying other platforms, but lack the technical programming skills required to directly interface with REST APIs or implement web-scraping techniques.
 Without accessible tools, these researchers --- despite their substantive expertise --- are effectively excluded from studying one of the most influential platforms for youth political engagement and information consumption.
 
@@ -136,7 +137,7 @@ This will match a supplied keyword or phrase against keywords and hashtags and r
 This somewhat odd default window is deliberate, as TikTok states that new videos take up to 48 hours to be added to the search engine behind the Research API and that statistics such as the view count can take up to 10 days to update.^[See <https://developers.tiktok.com/doc/research-api-faq>.]
 @entrena-serrano_tiktoks_2025 found in their tests that videos were frequently still missing after 72 hours, so when setting the dates manually, I recommend leaving a gap of at least three days between the end date of a query and the day it is run, and of ten days if the engagement statistics matter for the analysis.
 Every white-space is treated as an AND operator.
-To extend the data range, you can set a start and end (there is no limit how far you can go back):
+To extend the retrieved range, you can set a start and end date (there is no limit how far you can go back):
 
 
 ``` r
@@ -174,8 +175,8 @@ tt_query_videos("#rstats",
 #> #   hashtag_names <list>, voice_to_text <chr>
 ```
 
-The API itself only accepts a start and end that are a maximum of 30 days apart, but `traktok` takes care of this in the background: longer time spans are split into consecutive windows of at most 30 days, which are queried one after the other before the results are combined (`max_pages` then applies to each window separately).
-The returned object also carries the start and end date of the last window as attributes, so that a search that failed halfway through a long time span can be picked back up where it stopped.
+The API itself only accepts a start and end that are a maximum of 30 days apart, but `traktok` takes care of this in the background: longer time spans are split into consecutive windows of at most 30 days, which are queried one after the other before the results are combined.
+The returned object also carries the start and end date of the last window as attributes, so that a search can be picked back up where it stopped more easily.
 
 As said, the query syntax that TikTok uses is a little complicated, as users can chain queries with `AND`, `OR` and `NOT` operators (see @tbl-boolean) on a number of fields (`"create_date"`, `"username"`, `"region_code"`, `"video_id"`, `"hashtag_name"`, `"keyword"`, `"music_id"`, `"effect_id"`, and `"video_length"`).
 
@@ -382,7 +383,7 @@ auth_hidden("tiktok.com_cookies.txt")
 A few things about these cookies are worth clarifying.
 A logged in account is not strictly necessary, as TikTok also sets cookies for visitors who are not logged in, but the website hides some content, such as age-restricted videos, from these sessions and prompts a login after a few dozen search results at most, which is why I recommend logging in before exporting the cookies.
 Since the cookies identify the account uniquely, TikTok could in principle link the requests made by `traktok` to it.
-I have never had any action taken against an account I used, but I relied on a throwaway account for most of my work and recommend that users do the same; I return to the legal side of this in the section on legal and ethical considerations below.
+As of writing, there are no known incidents of TikTok taking action against the account of a `traktok` user, but I still recommend users to rely on throwaway accounts; I return to the legal side of this in the section on legal and ethical considerations below.
 
 Like in the Research API, users are able to search for videos, albeit at a slower pace and only within the range of what would be shown in the search on the website.
 Technically, the function opens a browser in the background and keeps scrolling down until there are no more videos found or until a predefined end time is reached.
@@ -474,7 +475,7 @@ rstats_df2
 #> #   is_secret <lgl>, is_for_friend <lgl>, is_slides <lgl>, …
 ```
 
-When users are scraping many URLs, which in my experience means thousands rather than hundreds, the function often fails eventually, due to a poor connection or because TikTok is blocking requests, if there are too many.
+When users are scraping many URLs, which in my experience means thousands rather than hundreds, the function often fails eventually for one reason or another.
 It therefore usually makes sense to save progress in a cache directory:
 
 ```r
@@ -532,7 +533,8 @@ kamalahq_df <- readRDS("kamalahq_df.rds")
 results_df <- tt_videos_hidden(kamalahq_df$video_id,
                                save_video = TRUE,
                                cache_dir = "kamalahq",
-                               dir = "kamalahq")
+                               dir = "kamalahq", 
+                               slideshows = TRUE)
 
 list.files("kamalahq") |> 
   tools::file_ext() |> 
@@ -542,7 +544,7 @@ list.files("kamalahq") |>
 ```
 
 As can be seen, the function downloaded 70 video files and additionally 96 image files, which are now also often shared on the platform, copying one of Instagram's main features.
-These image files belong to so-called slideshows or photo posts, for which TikTok has since stopped including the data in the page source that `tt_videos_hidden` reads.
+These image files belong to so-called slideshows or photo posts, for which TikTok has recently stopped including the data in the page source that `tt_videos_hidden` reads.
 `traktok` therefore recognises slideshows among the URLs and, once all other posts are collected, asks whether to hand them to `tt_slideshow_hidden` (or does so directly with `slideshows = TRUE`), which opens each post in a browser in the background, waits until the site has requested the post data itself and collects the metadata and images from there.
 As the audio track is often as important for understanding these posts as the images, the function also downloads the music of a slideshow as an mp3 file next to the images.
 Since the cache was set to the same folder, we also get the raw data as json files. 
@@ -631,8 +633,10 @@ For `traktok` users, this means deciding before the collection which of the retu
 
 Secondly, platform-centric methods like scraping public content operate in a legally ambiguous space: while cases like HiQ v. LinkedIn in the United States have upheld the legality of scraping publicly accessible data without breaching technological barriers [@ratswd_big_2020], researchers must still try to respect platform Terms of Service and consider that users may not be aware their public data can be used for research [@breuer_overview_2025].
 The two ways of accessing TikTok described above differ in this respect: the Research API is an official channel, whose terms researchers accept when they apply for access, whereas the 'hidden' API needs to be considered scraping, and TikTok's Terms of Service prohibit extracting data from the platform with automated software that TikTok has not approved.^[See the section "What you can't do on the Platform" in the terms for the European Economic Area, <https://www.tiktok.com/legal/page/eea/terms-of-service/en>; the terms for the United States, <https://www.tiktok.com/legal/page/us/terms-of-service/en>, contain the same clause.]
-@brown_web_2025 review the case law for the United States and conclude that the legal risk is lowest when researchers collect only what is publicly accessible without an account and do not circumvent technical barriers, and that it is higher when data are collected through an account, as the 'hidden' API functions of `traktok` do, since the account holder has agreed to the terms and the platform can withdraw its permission at any time, for example by blocking the account.
+
+@brown_web_2025 review the case law for the United States and conclude that the legal risk is lowest when researchers collect only what is publicly accessible without an account and do not circumvent technical barriers, and that it is higher when data are collected through an account, as the 'hidden' API functions of `traktok` can do, since the account holder has agreed to the terms and the platform can withdraw its permission at any time, for example by blocking the account.
 A breach of the Terms of Service alone is not a criminal offence in the United States and the platform would have to demonstrate actual harm, which is difficult in the case of non-commercial research [@brown_web_2025], but even though unlikely, legal dispute is costly and, as @brown_web_2025 point out, a university's legal department represents the university rather than the individual researcher.
+
 I therefore recommend that users consult their institution's legal counsel and data protection officer before collecting data at scale with the 'hidden' API, and clarify at the same time whether the institution would support them should TikTok take action against them.
 Zero legal risk is not attainable in this area, and excessive caution comes at the cost of research that is in the public interest [@brown_web_2025], which is why `traktok` is built to stay within what a regular user could do in a browser: the functions of the 'hidden' API wait a random interval between requests (see the `sleep_pool` argument), which keeps the pace of requests, and thereby the load on TikTok's servers, close to that of a human user, and when the site asks for a CAPTCHA, the browser is handed to the user rather than the challenge being circumvented.
 
@@ -664,7 +668,7 @@ TikTok has not explained these gaps, but the audits allow for informed assumptio
 For researchers this means that the Research API should not be mistaken for a complete record and that scraping the website remains the only way to check what it delivers, which is a second reason for keeping both routes in one package.
 
 As noted above, TikTok can change the endpoints behind the 'hidden' API at any time, and there is no guarantee that the Research API stays as it is either.
-I therefore intend to keep maintaining `traktok` for the foreseeable future: development happens openly in the GitHub repository, where users can report problems and contribute fixes, and stable versions are published on CRAN.
+I therefore intend to keep maintaining `traktok` for the foreseeable future: development happens openly in the GitHub repository^[<https://anonymous.4open.science/r/traktok-26DD>], where users can report problems and contribute fixes, and stable versions are published on CRAN (the Comprehensive R Archive Network).
 Should I at some point be unable to continue this work, which I consider unlikely, I will look for a successor and hand the package over to a new maintainer or organization rather than let it go stale.
 
 \newpage

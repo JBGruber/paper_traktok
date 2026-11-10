@@ -1,5 +1,5 @@
 ---
-title: "`traktok` --- Making TikTok Data Accesible for Research"
+title: "`traktok` --- Making TikTok Data Accessible for Research"
 author:
   - name: Johannes B. Gruber
     affiliations:
