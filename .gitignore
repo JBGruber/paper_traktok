@@ -10,8 +10,6 @@ tiktok_cookies.txt
 
 # Rendered output
 paper_traktok.pdf
-paper_traktok.pdf.md
-paper_traktok.tex
 paper_traktok.fff
 paper_traktok.ttt
 paper_traktok_files/
@@ -30,6 +28,9 @@ vids/
 
 # Scratch images in the root (figures for the readme live in media/)
 /*.png
+
+/ccr.cls
+/aup_logo.pdf
 
 # Reviews
 R1/
