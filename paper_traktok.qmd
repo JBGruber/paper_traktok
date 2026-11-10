@@ -399,8 +399,10 @@ It is also possible to scroll for an infinite time, stopping only when no more v
 However, whether or not an end time is defined, the user can always cancel the process without loosing data.
 After the function stopped or was stopped, the previous search can still be retrieved with `last_query()`.
 
-```{r}
-#| eval: false
+
+::: {.cell}
+
+```{.r .cell-code}
 library(traktok)
 rstats_df_f <- "rstats_df.rds"
 if (!file.exists(rstats_df_f)) {
@@ -414,6 +416,8 @@ if (!file.exists(rstats_df_f)) {
 rstats_urls <- readRDS(rstats_df_f)
 rstats_urls
 ```
+:::
+
 
 ```r
 #| eval: false
@@ -527,13 +531,6 @@ kamalahq_df <- query() |>
 
 And then download the video and image files through `tt_videos_hidden`:
 
-```{r}
-#| eval: false
-#| include: false
-# saveRDS(kamalahq_df, "kamalahq_df.rds")
-kamalahq_df <- readRDS("kamalahq_df.rds")
-```
-
 ```r
 
 results_df <- tt_videos_hidden(kamalahq_df$video_id,
@@ -560,68 +557,42 @@ The second important use case for combining both APIs is to compare them to asse
 As mentioned in the introduction, Germany's far right party AFD has managed to build a hard to overlook presence on TikTok, and serves as a demonstration case here.
 For convenience, `traktok` provides the function `tt_user_videos_api`, which makes queries to the Research API for all videos a user has published:
 
-```{r}
-#| eval: false
-#| echo: true
+
+::: {.cell}
+
+```{.r .cell-code}
 results_api <- tt_user_videos_api(
   username = "afdfraktionimbundestag",
   since = "2020-01-01"
 )
 ```
+:::
+
 
 The same function also exists for the 'hidden' API:
 
-```{r}
-#| eval: false
-#| echo: true
+
+::: {.cell}
+
+```{.r .cell-code}
 results_scraping <- tt_user_videos_hidden(
   username = "afdfraktionimbundestag",
   solve_captchas = TRUE
 )
 ```
+:::
 
-```{r}
-#| include: false
-library(tidyverse)
-results_api <- readRDS("comparison/results_api.rds") |>
-  distinct(video_id, .keep_all = TRUE) |>
-  mutate(available_on_api = TRUE)
-results_scraping <- readRDS("comparison/results_scraping.rds") |>
-  distinct(video_id, .keep_all = TRUE) |>
-  mutate(available_on_web = TRUE)
-diff_df <- results_api |>
-  full_join(results_scraping, by = "video_id") |>
-  #filter(is.na(create_time) | is.na(video_timestamp)) |>
-  mutate(
-    available_on = case_when(
-      available_on_api & available_on_web ~ "both",
-      available_on_web ~ "website",
-      available_on_api ~ "api"
-    ),
-    video_time = as.POSIXct(ifelse(
-      is.na(create_time),
-      video_timestamp,
-      create_time
-    )),
-    video_url_unformatted = paste0(
-      "https://www.tiktok.com/@afdfraktionimbundestag/video/",
-      video_id
-    ),
-    video_url = glue::glue(
-      '<a href="{video_url_unformatted}" target="_blank">Link</a>'
-    )
-  ) |>
-  select(video_id, available_on, video_time, video_url_unformatted)
-```
+
+
 
 This will open a real browser in the background that scrolls down on a specific account site until the beginning of a user's timeline is reached.
 This process will often trigger so-called *CAPTCHA*s, which are small challenges created to test if a human or bot is performing an action on the site.
 If that happens, and the argument `solve_captchas` is true, the browser will jump to the foreground, so that a user can solve it and `traktok` can continue scrolling.
 
 Comparing the results from the Research API and the scraping effort, we see some discrepancies.
-The Research API delivered `r nrow(results_api)`, while the 'hidden' API found `r nrow(results_scraping)` posts.
+The Research API delivered 308, while the 'hidden' API found 319 posts.
 However, the content is also not as similar as these numbers suggest.
-`r sum(diff_df$available_on == "website")` posts were only accessible via the website, while `r sum(diff_df$available_on == "api")` posts were found by the API, but not actually present on the website.
+15 posts were only accessible via the website, while 4 posts were found by the API, but not actually present on the website.
 Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content -- which can also be obtained through the Hidden API by logging in as an age-verified user.
 We currently do not know why the search from the API is incomplete (I come back to this in the final section).
 

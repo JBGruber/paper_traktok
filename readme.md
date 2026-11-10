@@ -23,23 +23,16 @@ The package has already been employed in several published studies across commun
 The paper is written in [Quarto](https://quarto.org/) and uses the [CCR template](https://github.com/ccr-journal/ccr-quarto), which is included in `_extensions/`.
 
 1. Install [R](https://www.r-project.org/) and [Quarto](https://quarto.org/docs/get-started/)
-2. Install the required `R` packages:
-
-```r
-if (!require("attachment", quietly = TRUE)) {
-  install.packages("attachment")
-}
-if (!require("rlang", quietly = TRUE)) {
-  install.packages("rlang")
-}
-required_packages <- attachment::att_from_qmds("paper_traktok.qmd")
-rlang::check_installed(c("quarto", required_packages))
-```
-
-3. Render:
+2. Render:
 
 ```r
 quarto::quarto_render("paper_traktok.qmd")
+```
+
+Or install [Quarto](https://quarto.org/docs/get-started/) on the command line and run
+
+```bash
+quarto render paper_traktok.qmd
 ```
 
 ## How to cite
