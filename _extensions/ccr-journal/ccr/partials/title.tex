@@ -1,0 +1,9 @@
+$if(title)$
+\title{$title$}
+$endif$
+$for(affiliations)$
+\addaffiliation{$it.id$}$if(it.department)$[$it.department$]$endif${$it.name$}{$it.country$}
+$endfor$
+$for(by-author)$
+\addauthor[$for(it.affiliations)$$it.id$$sep$,$endfor$]{$it.name.literal$}
+$endfor$
