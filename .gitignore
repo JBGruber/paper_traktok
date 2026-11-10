@@ -1,39 +1,35 @@
+# R / RStudio / editor
 .Rhistory
-cookies.txt
-kamalahq_df.rds
-*.docx
-*.Rproj
 .Rproj.user/
-
+*.Rproj
 /.luarc.json
-comparison/
-kamalahq/
-kamalahq_following.rds
-paper_traktok.fff
-paper_traktok.ttt
-afd/
-bundestag_vids/
-paper_traktok_files/
-*.png
-arxiv.sty
-*.rds
-orcidlink.sty
-paper_traktok.pdf
+
+# Credentials
+cookies.txt
+tiktok_cookies.txt
+
+# Rendered output
 paper_traktok.pdf
 paper_traktok.pdf.md
 paper_traktok.tex
-vids/
-tiktok_cookies.txt
-show.R
-skeet.R
-ccr_abstract_cache/
-search/
-aup_logo.pdf
-ccr.cls
-background/
-paper_traktok_old.tex
-paper_traktok_old.pdf
-paper_traktok_old.pdf.md
-paper_traktok_old_files/
+paper_traktok.fff
+paper_traktok.ttt
+paper_traktok_files/
 paper_traktok_diff.*
+*.docx
+
+# Collected data
+*.rds
+afd/
+background/
+bundestag_vids/
+comparison/
+kamalahq/
+search/
+vids/
+
+# Scratch images in the root (figures for the readme live in media/)
+/*.png
+
+# Reviews
 R1/
