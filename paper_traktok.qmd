@@ -13,10 +13,11 @@ affiliations:
     name: GESIS --- Leibniz Institute for the Social Sciences
     country: DE
 format:
-  ccr-pdf:
+  arxiv-pdf:
     keep-tex: true
     keep-md: true
     fig-format: pdf
+    runninghead: "traktok"
     include-in-header:
       - text: |
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
