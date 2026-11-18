@@ -314,6 +314,8 @@ query() |>
 #> #   hashtag_names <list>, voice_to_text <chr>
 ```
 
+As this is a common task, `traktok` also provides the convenience function `tt_user_videos_api`, which builds this query in the background and only needs a username and, optionally, a start and end date; I use it in the section on combining the APIs below.
+
 The second useful function that we are highlighting here is `tt_comments_api`.
 Using a video ID, it retrieves the full text of user comments, along with useful information about the discussion structure, like and reply counts.
 
@@ -433,7 +435,19 @@ head(last_query())
 #>  [6] "https://www.tiktok.com/@mrpecners/video/7274045053889285419"   
 ```
 
-Additionally, we can query all videos posted by a specific user account.
+As with the Research API, we can once again also query the videos posted by a specific user account.
+Like `tt_search_hidden`, `tt_user_videos_hidden` scrolls down the account's page in a browser in the background, so the same considerations about the scrolling time and CAPTCHAs apply, and then collects the data of all posts it found.
+As the website offers no way to filter by date, the function cannot be limited to a time window like the Research API example above; instead, it starts with the most recent posts and works backwards in time until the scrolling time is up or the first post of the account is reached:
+
+```r
+abdulelsayed_videos <- tt_user_videos_hidden(
+  "abdulelsayed",
+  scroll = "2minutes",       # stop scrolling after 2 minutes
+  solve_captchas = TRUE      # open a browser window if a captcha is detected
+)
+```
+
+Besides their videos, we can also retrieve who follows an account.
 The first step is to find out the internal ID of a user:
 
 ```r
@@ -546,7 +560,7 @@ This has the side effect that already downloaded data is not requested again, if
 
 The second important use case for combining both APIs is to compare them to assess the completeness of results, as has been done for Facebook [@hofacebook2020] and Twitter [@tromble_twitter_2017] in the past.
 As mentioned in the introduction, Germany's far-right party AfD has managed to build a hard-to-overlook presence on TikTok, and serves as a demonstration case here.
-For convenience, `traktok` provides the function `tt_user_videos_api`, which makes queries to the Research API for all videos a user has published:
+For this, we can use the convenience function `tt_user_videos_api` mentioned above, which makes queries to the Research API for all videos a user has published:
 
 
 ::: {.cell}
@@ -560,7 +574,7 @@ results_api <- tt_user_videos_api(
 :::
 
 
-The same function also exists for the 'hidden' API:
+Its counterpart for the 'hidden' API is `tt_user_videos_hidden`, which we already used above:
 
 
 ::: {.cell}
