@@ -52,6 +52,11 @@ abstract: |
   Importantly, both access methods can be combined, for example by using the Research API to identify relevant content and web-scraping to download the actual video files, enabling comprehensive data collection.
   An empirical comparison of both data access methods reveals significant discrepancies in data completeness, with both APIs returning different subsets of content, highlighting the importance of methodological transparency in TikTok research.
   The package has already been employed in several published studies across communication research and other disciplines, demonstrating its utility for systematic investigation of the platform.
+acknowledgements: |
+  `traktok` started out in 2022 as an `R` translation of Deen Freelon's pyktok Python module, and although all of its code has since been rewritten, I am grateful for this initial inspiration.
+  I thank Miriam Milzner for help with testing the package.
+  Much of the development around the Research API took place within the NEWSFLOWS project, which has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation programme (Grant agreement No. 947695), and I thank Damian Trilling for giving me the freedom to pursue this side project.
+  Finally, I thank everyone who has told me that they use `traktok` in their research and teaching: knowing that the package is useful to others is what keeps me developing and maintaining it.
 ---
 
 Since the social media platform TikTok went live in Europe in August 2018^[[https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin](https://web.archive.org/web/20231122151117/https://www.theverge.com/2018/8/2/17644260/musically-rebrand-tiktok-bytedance-douyin)], it has quickly become one of the major players on the market.
