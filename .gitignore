@@ -16,7 +16,8 @@ paper_traktok_files/
 paper_traktok_diff.*
 *.docx
 
-# Collected data
+# Collected data (the paper caches everything it collects in data/)
+data/
 *.rds
 afd/
 background/
@@ -34,3 +35,8 @@ vids/
 
 # Reviews
 R1/
+
+# downloaded videos and images
+/*.mp4
+rstats/
+abdulelsayed/
