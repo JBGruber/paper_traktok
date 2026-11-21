@@ -23,7 +23,27 @@ The package has already been employed in several published studies across commun
 The paper is written in [Quarto](https://quarto.org/) and uses the [CCR template](https://github.com/ccr-journal/ccr-quarto), which is included in `_extensions/`.
 
 1. Install [R](https://www.r-project.org/) and [Quarto](https://quarto.org/docs/get-started/)
-2. Render:
+2. Install the required `R` packages:
+
+```r
+if (!require("attachment", quietly = TRUE)) {
+  install.packages("attachment")
+}
+if (!require("rlang", quietly = TRUE)) {
+  install.packages("rlang")
+}
+required_packages <- attachment::att_from_qmds("paper_traktok.qmd")
+rlang::check_installed(c("quarto", required_packages))
+```
+
+3. Authenticate with TikTok, as described in the paper (needs access to the Research API and a cookie file exported from your browser):
+
+```r
+traktok::auth_research()
+traktok::auth_hidden("tiktok.com_cookies.txt")
+```
+
+4. Render:
 
 ```r
 quarto::quarto_render("paper_traktok.qmd")
@@ -34,6 +54,11 @@ Or install [Quarto](https://quarto.org/docs/get-started/) on the command line an
 ```bash
 quarto render paper_traktok.qmd
 ```
+
+The code in the paper is executed when rendering.
+As collecting data from TikTok takes long, and the 'hidden' API may ask you to solve CAPTCHAs in a browser window, the results are cached in `data/` (not tracked in git): the first render collects the data, later renders reuse it.
+Delete `data/cache/` to collect the data anew.
+Since content on TikTok changes, the numbers and outputs will differ from the published version of the paper.
 
 ## How to cite
 

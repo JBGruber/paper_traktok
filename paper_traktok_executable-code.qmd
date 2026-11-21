@@ -32,6 +32,20 @@ format:
           \newunicodechar{│}{|}
           \newunicodechar{├}{+}
           \newunicodechar{└}{\textbackslash}
+          % emoji and decorative letters in user names in the example output:
+          % ASCII stand-ins, with the width tibble gives them to keep alignment
+          \newunicodechar{☠}{x}
+          \newunicodechar{^^^^fe0f}{}% emoji variation selector, no width
+          \newunicodechar{🇦}{A}% regional indicators (flags) as their letters
+          \newunicodechar{🇪}{E}
+          \newunicodechar{🇰}{K}
+          \newunicodechar{🇳}{N}
+          \newunicodechar{🇵}{P}
+          \newunicodechar{🇹}{T}
+          \newunicodechar{𝘈}{A}
+          \newunicodechar{𝘥}{d}
+          \newunicodechar{𝘺}{y}
+          \newunicodechar{ᐟ}{'}
 bibliography: bibliography.bib
 pdf-engine: xelatex
 knitr:
@@ -339,12 +353,12 @@ This can be accomplished as shown below:
 
 
 ```{r}
-tt_user_follower_api("abdulelsayed")
+tt_user_follower_api("abdulelsayed", max_pages = 1) # 1 is the default
 
-tt_user_following_api("abdulelsayed")
+tt_user_following_api("abdulelsayed", max_pages = 1) # 1 is the default
 ```
 
-As @tbl-overview shows, there are several other functions that query the Research API. However, `tt_user_liked_videos_api` and `tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of accounts, similar to the second example above;
+As @tbl-overview shows, there are several other functions that query the Research API. However, `tt_user_liked_videos_api` and `tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of accounts;
 `tt_playlist_api` relates to a feature of the platform that is not widely used;
 and `tt_user_info_api` only returns very basic information about accounts that is usually not meaningful for research.
 
@@ -382,15 +396,15 @@ One caveat is that TikTok usually interrupts the scrolling with a CAPTCHA at som
 In the example below, we search for the hashtag "rstats" again and let the function scroll for two minutes.
 It is also possible to scroll for an infinite time, stopping only when no more videos are returned.
 However, whether or not an end time is defined, the user can always cancel the process without losing data.
-After the function stopped or was stopped, the previous search can still be retrieved with `last_query()`.
+After the function stopped or was stopped, the URLs of the videos found by the previous search can still be retrieved with `last_query()`.
 
 ```{r}
-rstats_urls <- tt_search_hidden(
+rstats_videos <- tt_search_hidden(
   "#rstats",
   scroll = "2minutes", # stop scrolling after 2 minutes
   solve_captchas = TRUE # open a browser window if a captcha is detected
 )
-head(rstats_urls)
+head(rstats_videos)
 head(last_query())
 ```
 
@@ -398,7 +412,7 @@ head(last_query())
 #| include: false
 # the chunks below read the search results from a file, as one would in a
 # project; this file is the search from above
-saveRDS(rstats_urls, "search_results.rds")
+saveRDS(rstats_videos, "search_results.rds")
 ```
 
 As with the Research API, we can once again also query the videos posted by a specific user account.
@@ -428,7 +442,7 @@ abdulelsayed_following <- tt_get_following_hidden(abdulelsayed_info$secUid)
 nrow(abdulelsayed_following)
 ```
 
-This does not deliver the full set of followers, but only returns what would be visible on the web version.
+For large accounts, this does not deliver the full set of followers or followed accounts, but only what would be visible on the web version (the function returns at most 5,000 accounts).
 It additionally takes much longer than the Research API version.
 Therefore, running the function is only interesting for researchers who do not have access to the official API.
 
@@ -475,7 +489,7 @@ I refrain from documenting the raw data in more detail, however, as TikTok keeps
 
 As the TikTok Research API does not deliver video or image files, any analysis of the content of posts requires an alternative route to accessing these data.
 `traktok` enables this access via the function `tt_videos_hidden`.
-As an example for combining both APIs, let's say we want to acquire all posts from "abdulelsayed", the campaign account of American politician, epidemiologist, and academic Abdul El-Sayed, who was elected US Senator in 2026, from August 2026.
+As an example for combining both APIs, let's say we want to acquire all posts from "abdulelsayed", the campaign account of American politician, epidemiologist, and academic Abdul El-Sayed, who was elected US Senator in 2026, from the days around the election (1 to 6 November 2026).
 We can first search for post URLs using the Research API:
 
 ```{r}
