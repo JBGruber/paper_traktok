@@ -14,8 +14,8 @@ affiliations:
     country: DE
 format:
   ccr-pdf:
-    keep-tex: true
-    keep-md: true
+    keep-tex: false
+    keep-md: false
     fig-format: pdf
     include-in-header:
       - text: |
@@ -69,7 +69,7 @@ abstract: |
 acknowledgements: |
   `traktok` started out in 2022 as an `R` translation of Deen Freelon's pyktok Python module, and although all of its code has since been rewritten, I am grateful for this initial inspiration.
   I thank Miriam Milzner for help with testing the package.
-  Much of the development around the Research API took place within the NEWSFLOWS project, which has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation programme (Grant agreement No. 947695), and I thank Damian Trilling for giving me the freedom to pursue this side project.
+  Part of the development around the Research API took place within the NEWSFLOWS project, which has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation programme (Grant agreement No. 947695), and I thank Damian Trilling for giving me the freedom to pursue this side project.
   Finally, I thank everyone who has told me that they use `traktok` in their research and teaching: knowing that the package is useful to others is what keeps me developing and maintaining it.
 ---
 
@@ -90,7 +90,7 @@ What these studies have in common is that their data were limited by what could 
 
 Research challenges stem from both the computational complexity of analysing video content at scale --- which I will not address here --- and limited data access.
 As @cervi_tiktok_2023 note, they had to search and collect posts manually, since any official API access was not available at the time.
-While TikTok's 2023 introduction of a Research API has improved this situation by providing qualified researchers with platform access, they do not provide tools to work with the API directly and the access remains both selective and limited in scope.
+While TikTok's 2023 introduction of a Research API has improved this situation by providing qualified researchers with platform access, TikTok does not provide tools to work with the API directly and the access remains both selective and limited in scope.
 Most prominently, it is still not possible to download images and videos from the platform.
 Yet the video files are worth the effort: @kim_going_2023, for example, find that users engage differently with emotional and identity cues in anti-vaccination videos depending on whether these appear in the caption, the spoken audio, or the visuals, so that an analysis of textual metadata alone would miss an important part of how content on the platform works.
 This creates a significant barrier for communication researchers who might possess deep theoretical knowledge and extensive experience studying other platforms, but lack the technical programming skills required to directly interface with REST APIs or implement web-scraping techniques.
@@ -121,6 +121,7 @@ I then showcase how both paths can be combined meaningfully to gather insights i
 | get videos in a playlist    | tt_playlist      | tt_playlist_api           | \-                      |
 | build query objects         | query            | (query_and, query_or, query_not) | \-               |
 | get raw post data           | tt_json          | \-                        | tt_request_hidden       |
+| get slideshow posts (+images) | \-             | \-                        | tt_slideshow_hidden     |
 | retrieve last query/results | last_query, last_comments | \-               | \-                      |
 | authenticate a session      | \-               | auth_research             | auth_hidden             |
 
@@ -148,6 +149,7 @@ This process usually does not have to be repeated, except when the user requests
 
 ``` r
 library(traktok)
+library(dplyr) # used below to shorten printed output
 auth_research()
 ```
 
@@ -158,12 +160,19 @@ For queries, TikTok uses a fine-grained, yet complicated query syntax.^[See <htt
 For convenience, a query in `traktok` is constructed internally when you search with a key phrase directly:
 
 ``` r
-tt_query_videos("#rstats", max_pages = 2L)
-#> ── search id: 7709407588705670158 ────────────────────────────────────
-#> # A tibble: 1 × 23
-#>   video_id author_name view_count comment_count share_count like_count
-#>   <chr>    <chr>            <dbl>         <dbl>       <dbl>      <dbl>
-#> 1 7705730… statistics…        285             0           1         11
+tt_search_api("#rstats", max_pages = 1L) |>
+  head() |> # only print the first six videos
+  # drop the usernames of video authors to not print personal information here
+  select(-author_name)
+#> ── search id: 7711712030692070414 ────────────────────────────────────
+#> # A tibble: 5 × 22
+#>   video_id            view_count comment_count share_count like_count
+#>   <chr>                    <dbl>         <dbl>       <dbl>      <dbl>
+#> 1 7708166457800084749       1643             1           4         76
+#> 2 7708096706180582676        158             0           0         10
+#> 3 7708010960786640160        469             0           0          4
+#> 4 7707795585000049951        289             1           0          7
+#> 5 7707655558026874120        778             2           2         38
 #> # ℹ 17 more variables: favorites_count <dbl>, region_code <chr>,
 #> #   create_time <dttm>, video_duration <int>, effect_ids <list>,
 #> #   effect_info_list <list>, music_id <chr>, playlist_id <chr>,
@@ -173,47 +182,38 @@ tt_query_videos("#rstats", max_pages = 2L)
 #> #   is_stem_verified <lgl>, video_label <list>, video_tag <list>
 ```
 
-This will match a supplied keyword or phrase against keywords and hashtags and return up to 200 results (each page has 100 results and 2 pages are requested by default) from ten and eleven days ago (the defaults are `start_date = Sys.Date() - 11` and `end_date = Sys.Date() - 10`).
+This will match a supplied keyword or phrase against keywords and hashtags, where every white-space is treated as an AND operator, and return up to 100 results (one page with 100 results is requested by default; more pages can be requested with `max_pages`) from ten and eleven days ago (the defaults are `start_date = Sys.Date() - 11` and `end_date = Sys.Date() - 10`).
 This somewhat odd default window is deliberate, as TikTok states that new videos take up to 48 hours to be added to the search engine behind the Research API and that statistics such as the view count can take up to 10 days to update.^[See <https://developers.tiktok.com/doc/research-api-faq>.]
 @entrena-serrano_tiktoks_2025 found in their tests that videos were frequently still missing after 72 hours, so when setting the dates manually, I recommend leaving a gap of at least three days between the end date of a query and the day it is run, and of ten days if the engagement statistics matter for the analysis.
-Every white-space is treated as an AND operator.
 To extend the retrieved range, you can set a start and end date (there is no limit on how far you can go back):
 
 
 ``` r
-tt_query_videos(
+tt_search_api(
   "#rstats",
-  max_pages = 2L,
+  max_pages = 1L,
   start_date = as.Date("2023-11-01"),
   end_date = as.Date("2023-11-29")
-)
-#> ── search id: 7709121512296616974 ────────────────────────────────────
-#> # A tibble: 19 × 13
-#>    video_id           author_name view_count comment_count share_count
-#>    <chr>              <chr>            <int>         <int>       <int>
-#>  1 73068938532970529… statistics…        956             3           0
-#>  2 73063077445822251… learningca…       1490            11           0
-#>  3 73050144763680064… picanumeros       7731             9          41
-#>  4 73029706679079928… smooth.lea…     100047            19          34
-#>  5 73024703795016041… statistics…       1585             0           7
-#>  6 73009774981651039… statistics…      27534             3           1
-#>  7 73009314760597373… rigochando        4354             1          12
-#>  8 73006607564236915… aprende.ti…          5             3           2
-#>  9 72999870594170422… statistics…       1187             1           1
-#> 10 72996575168147325… rigochando        1071             4           0
-#> 11 72993429448788574… rigochando         616             0           2
-#> 12 72989666841345425… rigochando        1464             0           2
-#> 13 72969114865914544… biofreelan…      40967            16         120
-#> 14 72969114862517813… biofreelan…       7229             1          24
-#> 15 72969114787817423… biofreelan…       1852             2           8
-#> 16 72966888566094758… mrpecners          750             2           0
-#> 17 72965186353742676… l_a_kelly          515             5           0
-#> 18 72964986453508129… mrpecners          441             0           0
-#> 19 72962888433789862… casaresfel…        279             0           0
-#> # ℹ 8 more variables: like_count <int>, region_code <chr>,
-#> #   create_time <dttm>, effect_ids <list>, music_id <chr>,
+) |>
+  head() |> # only print the first six videos
+  select(-author_name) # and not the usernames of video authors
+#> ── search id: 7711712030692086798 ────────────────────────────────────
+#> # A tibble: 6 × 22
+#>   video_id            view_count comment_count share_count like_count
+#>   <chr>                    <dbl>         <dbl>       <dbl>      <dbl>
+#> 1 7306893853297052960        956             3           0         34
+#> 2 7306307744582225195       1492            11           0         52
+#> 3 7305014476368006433       7742             9          41        280
+#> 4 7302970667907992850     100051            19          34       1381
+#> 5 7302470379501604128       1585             0           7         36
+#> 6 7300977498165103904      27534             3           1        130
+#> # ℹ 17 more variables: favorites_count <dbl>, region_code <chr>,
+#> #   create_time <dttm>, video_duration <int>, effect_ids <list>,
+#> #   effect_info_list <list>, music_id <chr>, playlist_id <chr>,
 #> #   video_description <chr>, hashtag_names <list>,
-#> #   voice_to_text <chr>
+#> #   hashtag_info_list <list>, video_mention_list <list>,
+#> #   sticker_info_list <list>, voice_to_text <chr>,
+#> #   is_stem_verified <lgl>, video_label <list>, video_tag <list>
 ```
 
 The API itself only accepts a start and end that are a maximum of 30 days apart, but `traktok` takes care of this in the background: longer time spans are split into consecutive windows of at most 30 days, which are queried one after the other before the results are combined.
@@ -260,14 +260,14 @@ query() |> # start by using query()
 ```
 
 
-| Operation | Results are returned if field_values are...     |
-| --------- | ----------------------------------------------- |
-| EQ        | equal to the value in the field                 |
-| IN        | equal to a value in the field                   |
-| GT        | greater than the value in the field             |
-| GTE       | greater than or equal to the value in the field |
-| LT        | lower than the value in the field               |
-| LTE       | lower than or equal to the value in the field   |
+| Operation | Results are returned if the value in the field is... |
+| --------- | ---------------------------------------------------- |
+| EQ        | equal to the value in field_values                   |
+| IN        | equal to one of the values in field_values           |
+| GT        | greater than the value in field_values               |
+| GTE       | greater than or equal to the value in field_values   |
+| LT        | lower than the value in field_values                 |
+| LTE       | lower than or equal to the value in field_values     |
 
 : Condition operators as used by TikTok {#tbl-match}
 
@@ -303,16 +303,17 @@ search_df <- query() |>
     end_date = as.Date("2023-11-29")
   )
 
-search_df
+search_df |>
+  select(-author_name) # do not print the usernames of video authors
 #> ── search id: 7709396556629300255 ────────────────────────────────────
-#> # A tibble: 2 × 13
-#>   video_id author_name view_count comment_count share_count like_count
-#>   <chr>    <chr>            <int>         <int>       <int>      <int>
-#> 1 7296688… mrpecners          750             2           0          6
-#> 2 7296498… mrpecners          441             0           0          6
-#> # ℹ 7 more variables: region_code <chr>, create_time <dttm>,
-#> #   effect_ids <list>, music_id <chr>, video_description <chr>,
-#> #   hashtag_names <list>, voice_to_text <chr>
+#> # A tibble: 2 × 12
+#>   video_id view_count comment_count share_count like_count region_code
+#>   <chr>         <int>         <int>       <int>      <int> <chr>      
+#> 1 7296688…        750             2           0          6 US         
+#> 2 7296498…        441             0           0          6 US         
+#> # ℹ 6 more variables: create_time <dttm>, effect_ids <list>,
+#> #   music_id <chr>, video_description <chr>, hashtag_names <list>,
+#> #   voice_to_text <chr>
 ```
 
 This will return videos posted in the US or Japan that have "rstats" as the only hashtag or as one of the keywords and have a length of `"MID"`, `"LONG"`, or `"EXTRA_LONG"`.^[
@@ -331,29 +332,23 @@ query() |>
   tt_search_api(
     start_date = as.Date("2026-11-01"),
     end_date = as.Date("2026-11-06")
-  )
+  ) |>
+  head() |> # only print the first six videos
+  select(-author_name) # which all come from the queried account anyway
 #> ── search id: 7709407382723531806 ────────────────────────────────────
-#> # A tibble: 14 × 23
-#>    video_id           author_name view_count comment_count share_count
-#>    <chr>              <chr>            <dbl>         <dbl>       <dbl>
-#>  1 77051833010146542… abdulelsay…     685349          1383         329
-#>  2 77047402458450854… abdulelsay…    1349349          2456         427
-#>  3 77043103043180495… abdulelsay…   34978830        139494      217967
-#>  4 77043097805417054… abdulelsay…    3614473          9072        7099
-#>  5 77043019763428262… abdulelsay…    1711542          1146         541
-#>  6 77037012426434839… abdulelsay…    2439669          1827        1216
-#>  7 77036458194922406… abdulelsay…    1954617          2342        3439
-#>  8 77036404015923069… abdulelsay…    1261407           475         518
-#>  9 77036202209670300… abdulelsay…    1934264          1674        5463
-#> 10 77036187537156375… abdulelsay…    7148024         13197       36570
-#> 11 77036154013216146… abdulelsay…     765575           519         273
-#> 12 77036053251815047… abdulelsay…     648543           224         146
-#> 13 77035710909661053… abdulelsay…    4266196         19249        6569
-#> 14 77032238471133463… abdulelsay…    1498642          3090        7757
-#> # ℹ 18 more variables: like_count <dbl>, favorites_count <dbl>,
-#> #   region_code <chr>, create_time <dttm>, video_duration <int>,
-#> #   effect_ids <list>, effect_info_list <list>, music_id <chr>,
-#> #   playlist_id <chr>, video_description <chr>, hashtag_names <list>,
+#> # A tibble: 6 × 22
+#>   video_id            view_count comment_count share_count like_count
+#>   <chr>                    <dbl>         <dbl>       <dbl>      <dbl>
+#> 1 7705183301014654239     685349          1383         329      28733
+#> 2 7704740245845085470    1349349          2456         427      65011
+#> 3 7704310304318049549   34978830        139494      217967    5675229
+#> 4 7704309780541705486    3614473          9072        7099     420961
+#> 5 7704301976342826253    1711542          1146         541      45691
+#> 6 7703701242643483917    2439669          1827        1216      93429
+#> # ℹ 17 more variables: favorites_count <dbl>, region_code <chr>,
+#> #   create_time <dttm>, video_duration <int>, effect_ids <list>,
+#> #   effect_info_list <list>, music_id <chr>, playlist_id <chr>,
+#> #   video_description <chr>, hashtag_names <list>,
 #> #   hashtag_info_list <list>, video_mention_list <list>,
 #> #   sticker_info_list <list>, voice_to_text <chr>,
 #> #   is_stem_verified <lgl>, video_label <list>, video_tag <list>
@@ -365,23 +360,19 @@ The second useful function that we are highlighting here is `tt_comments_api`.
 Using a video ID, it retrieves the full text of user comments, along with useful information about the discussion structure, like and reply counts.
 
 ``` r
-tt_comments_api(video_id = "7705183301014654239")
-#> ── search id:  ───────────────────────────────────────────────────────
-#> # A tibble: 97 × 8
-#>    create_time display_name      id       like_count parent_comment_id
-#>          <int> <chr>             <chr>         <int> <chr>            
-#>  1  1794003164 Zeki🇹🇳            7705184…        919 7705183301014654…
-#>  2  1794019704 Brandon Max       7705255…        511 7705183301014654…
-#>  3  1794020395 Jen               7705258…        412 7705183301014654…
-#>  4  1794003112 ego_ABE           7705184…        300 7705183301014654…
-#>  5  1794008641 user9907101721782 7705208…        214 7705183301014654…
-#>  6  1794010898 TikTokShare       7705217…        210 7705183301014654…
-#>  7  1794005681 k_i1222k0         7705195…        155 7705183301014654…
-#>  8  1794004453 Ronin D           7705190…        141 7705183301014654…
-#>  9  1794008203 noam              7705206…         76 7705183301014654…
-#> 10  1794006728 Vicky             7705200…         73 7705183301014654…
-#> # ℹ 87 more rows
-#> # ℹ 3 more variables: reply_count <int>, text <chr>, video_id <chr>
+tt_comments_api(video_id = "7705183301014654239") |>
+  head() |> # only print the first six comments
+  select(-display_name) # and not the names of commenters
+#> # A tibble: 6 × 7
+#>   video_id  create_time id    like_count parent_comment_id reply_count
+#>   <chr>           <int> <chr>      <int> <chr>                   <int>
+#> 1 77051833…  1794003164 7705…        923 7705183301014654…           3
+#> 2 77051833…  1794019704 7705…        518 7705183301014654…          21
+#> 3 77051833…  1794020395 7705…        418 7705183301014654…           7
+#> 4 77051833…  1794003112 7705…        303 7705183301014654…           3
+#> 5 77051833…  1794008641 7705…        216 7705183301014654…           1
+#> 6 77051833…  1794010898 7705…        211 7705183301014654…           1
+#> # ℹ 1 more variable: text <chr>
 ```
 
 For many research projects, it will also be of value to determine who a user follows and who they are followed by.
@@ -389,37 +380,18 @@ This can be accomplished as shown below:
 
 
 ``` r
-tt_user_follower_api("abdulelsayed", max_pages = 1) # 1 is the default
-#> # A tibble: 89 × 3
-#>    display_name            username                 following_user
-#>    <chr>                   <chr>                    <chr>         
-#>  1 "WaQaR Alî"             mrwaqar331               abdulelsayed  
-#>  2 "King Harun"            mdharunurrashid458       abdulelsayed  
-#>  3 "khalilabuali_"         khalilabuali_            abdulelsayed  
-#>  4 "☠️ 🇵🇰RoCk AfRiDi 🇦🇪☠️"   rahimafridi1992gmail.com abdulelsayed  
-#>  5 "𝘈𝘥𝘥𝘺 .ᐟ"               addyr0s3                 abdulelsayed  
-#>  6 "Arafat Abdi"           36134427288              abdulelsayed  
-#>  7 "MÜSLÜM. KURTOĞLU.2763" mslmkurtolu              abdulelsayed  
-#>  8 "Noor Ali»\"\"\"\"\"\"" nooralikhan625           abdulelsayed  
-#>  9 "cherki"                zaakir504                abdulelsayed  
-#> 10 "Mmuhammad Amir"        mmuhammad.amir79         abdulelsayed  
-#> # ℹ 79 more rows
+# max_pages = 1 is the default
+follower_df <- tt_user_follower_api("abdulelsayed", max_pages = 1)
+following_df <- tt_user_following_api("abdulelsayed", max_pages = 1)
 
-tt_user_following_api("abdulelsayed", max_pages = 1) # 1 is the default
-#> # A tibble: 96 × 3
-#>    display_name                 username             following_user
-#>    <chr>                        <chr>                <chr>         
-#>  1 Bruce Springsteen            springsteen          abdulelsayed  
-#>  2 Mary Sheffield               msmarysheffield      abdulelsayed  
-#>  3 Benson HQ                    jocelynbensonhq      abdulelsayed  
-#>  4 Voodies Interviews           voodies              abdulelsayed  
-#>  5 Mandy Patinkin and Kathryn G mandypatinktok       abdulelsayed  
-#>  6 Chris Rabb                   chris.rabb           abdulelsayed  
-#>  7 Johnny Palmadessa            johnnypalmadessa     abdulelsayed  
-#>  8 birthcenterequitybce         birthcenterequitybce abdulelsayed  
-#>  9 Birth Detroit                birth_detroit        abdulelsayed  
-#> 10 Hasan Minhaj                 hasanminhaj          abdulelsayed  
-#> # ℹ 86 more rows
+# the results consist of (user)names, mostly of private individuals,
+# so we only print the size and columns of the results here
+dim(follower_df)
+#> [1] 89  3
+colnames(follower_df)
+#> [1] "display_name"   "username"       "following_user"
+dim(following_df)
+#> [1] 96  3
 ```
 
 As @tbl-overview shows, there are several other functions that query the Research API. However, `tt_user_liked_videos_api` and `tt_user_pinned_videos_api` query information that is opt-in and therefore turned off by the large majority of accounts;
@@ -484,13 +456,15 @@ head(rstats_videos)
 #> #   author_nickname <chr>, author_bio <chr>, download_url <chr>,
 #> #   html_status <int>, music <list>, challenges <list>,
 #> #   video_is_ad <lgl>, is_secret <lgl>, is_for_friend <lgl>, …
-head(last_query())
-#> [1] "https://www.tiktok.com/@adewale_carter/video/7637113796460350741"   
-#> [2] "https://www.tiktok.com/@smooth.learning.c/video/7257689890245201153"
-#> [3] "https://www.tiktok.com/@claire_malone/video/7578976731646774541"    
-#> [4] "https://www.tiktok.com/@posit_pbc/video/7649451817901755662"        
-#> [5] "https://www.tiktok.com/@statisticsglobe/video/7559603630563675425"  
-#> [6] "https://www.tiktok.com/@statisticsglobe/video/7708327922184047904"
+# the URLs contain the usernames of video authors, which we mask here
+head(last_query()) |>
+  sub(pattern = "@[^/]+", replacement = "@user")
+#> [1] "https://www.tiktok.com/@user/video/7637113796460350741"
+#> [2] "https://www.tiktok.com/@user/video/7257689890245201153"
+#> [3] "https://www.tiktok.com/@user/video/7578976731646774541"
+#> [4] "https://www.tiktok.com/@user/video/7649451817901755662"
+#> [5] "https://www.tiktok.com/@user/video/7559603630563675425"
+#> [6] "https://www.tiktok.com/@user/video/7708327922184047904"
 ```
 
 As with the Research API, we can once again also query the videos posted by a specific user account.
@@ -666,9 +640,9 @@ This process will often trigger so-called *CAPTCHA*s, which are small challenges
 If that happens, and the argument `solve_captchas` is true, the browser will jump to the foreground, so that a user can solve it and `traktok` can continue scrolling.
 
 Comparing the results from the Research API and the scraping effort, we see some discrepancies.
-The Research API delivered 308, while the 'hidden' API found 319 posts.^[This analysis was conducted on 31 October 2024.]
+The Research API delivered 308 posts, while the 'hidden' API found 319 posts.^[This analysis was conducted on 31 October 2024.]
 However, the content is also not as similar as these numbers suggest.
-Fifteen posts were only accessible via the website, while 4 posts were found by the API, but not actually present on the website.
+In total, 15 posts were only accessible via the website, while 4 posts were found by the API, but not actually present on the website.
 Searching manually for the videos not present on the channel page on the website, it turns out that these videos were restricted by TikTok as they contain extreme or age-restricted content --- which can also be obtained through the 'hidden' API by logging in as an age-verified user.
 We currently do not know why the search from the API is incomplete (I come back to this in the final section).
 
