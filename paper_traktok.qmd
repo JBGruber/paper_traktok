@@ -17,6 +17,7 @@ format:
     keep-tex: false
     keep-md: false
     fig-format: pdf
+    wrap: none # no line breaks in title/abstract, which OJS rejects
     include-in-header:
       - text: |
           \AddToHook{env/Highlighting/begin}{\scriptsize \linespread{1}}
