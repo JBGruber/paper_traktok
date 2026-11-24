@@ -48,7 +48,12 @@ format:
           \newunicodechar{ᐟ}{'}
 bibliography: bibliography.bib
 pdf-engine: xelatex
-keywords: TikTok, social media research, research software, data collection
+keywords:
+  - web scraping
+  - data access
+  - software
+  - API
+  - R
 shortauthors: Gruber
 doi: "10.5117/CCR2026.4.9.GRUB"
 volume: "8"
